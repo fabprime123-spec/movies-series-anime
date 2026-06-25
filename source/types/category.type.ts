@@ -1,0 +1,10 @@
+export type Category =
+  | "movie"
+  | "series"
+  | "anime"
+  | "documentary"
+  | "k_drama"
+  | "c_drama"
+  | "asian_drama"
+  | "animation"
+  | "mini_series"

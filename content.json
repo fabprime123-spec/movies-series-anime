@@ -1,0 +1,40 @@
+{
+  "movies": [
+    "Interstellar",
+    "Avengers"
+  ],
+  "series": [
+    "Young Sheldon",
+    "3 body Problem"
+  ],
+  "documentary": [
+    "Cosmos: A Space Odyssey"
+  ],
+  "asian-drama": [
+    "K-drama",
+    "J-drama",
+    "C-drama"
+  ],
+  "anime": [
+    "Death Note",
+    "Lookism"
+  ],
+  "animation": [
+    "Arcane"
+  ],
+  "mini-series": [
+    "Chernobyl"
+  ],
+  "reality-competition": [
+    "Cooking",
+    "Survival",
+    "Talent-Shows"
+  ],
+  "game-esports": [
+    "Gaming",
+    "Esports"
+  ],
+  "short-film": [
+    ""
+  ]
+}

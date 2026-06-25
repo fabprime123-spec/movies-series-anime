@@ -11,7 +11,8 @@ export function Text({ children, style, ...props }: CustomTextProps) {
 
   return (
     <RNText
-      style={[styles.text, { color: theme.foreground, fontFamily: fonts.general.regular }]}
+      style={[styles.text, { color: theme.foreground, fontFamily: fonts.general.regular }, style]}
+      {...props}
     >
       {children}
     </RNText>
