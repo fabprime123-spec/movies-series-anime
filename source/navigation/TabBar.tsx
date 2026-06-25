@@ -15,7 +15,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const { theme, accentColor } = useTheme()
 
   return (
-    <LinearGradient colors={[theme.border, theme.card, theme.background]} style={[styles.container]}>
+    <LinearGradient colors={[theme.surface, theme.background]} style={[styles.container]}>
       {
         state.routes.map((route, index) => {
           const focused = state.index === index

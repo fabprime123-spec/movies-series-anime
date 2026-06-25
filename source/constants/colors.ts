@@ -1,18 +1,20 @@
 export const colors = {
   dark: {
-    background: "#050505",
-    surface: "#111111",
-    card: "#181818",
-    text: "#FFFFFF",
-    muted: "#A1A1AA",
-    border: "#27272A"
+    background: "#000000",
+    card: "#141414",
+    surface: "#19191F",
+    border: "#292932",
+    ring: "#3F3F46",
+    muted: "#71717A",
+    foreground: "#FAFAFA"
   },
   light: {
     background: "#FFFFFF",
-    surface: "#DDDDDD",
-    card: "#AAAAAA",
-    text: "#111111",
-    muted: "#71717A",
-    border: "#888888"
+    card: "#DDDDDD",
+    surface: "#CCCCCC",
+    border: "#BBBBBB",
+    ring: "#A1A1AA",
+    muted: "#52525B",
+    foreground: "#09090B"
   }
 }
