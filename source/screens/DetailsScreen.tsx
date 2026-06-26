@@ -1,9 +1,10 @@
-import { Text, View } from "react-native"
+import { Container } from "../components/ui/Container"
+import { Text } from "../components/ui/Text"
 
 export function DetailsScreen() {
   return (
-    <View>
+    <Container>
       <Text>Details</Text>
-    </View>
+    </Container>
   )
 }

@@ -15,7 +15,7 @@ const ThemeContext = createContext<ThemeContextType | null>(null)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<Mode>("dark")
-  const [accentColor, setAccentColor] = useState(accents.teal)
+  const [accentColor, setAccentColor] = useState(accents.red)
   const theme = mode === "dark" ? colors.dark : colors.light
 
   const changeMode = () => setMode((p) => p === "dark" ? "light" : "dark")

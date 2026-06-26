@@ -1,9 +1,10 @@
-import { Text, View } from "react-native"
+import { Container } from "../components/ui/Container"
+import { Text } from "../components/ui/Text"
 
 export function LibraryScreen() {
   return (
-    <View>
+    <Container>
       <Text>Library</Text>
-    </View>
+    </Container>
   )
 }

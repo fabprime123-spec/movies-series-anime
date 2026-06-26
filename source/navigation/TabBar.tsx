@@ -1,14 +1,14 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs"
 import { Pressable, StyleSheet, View } from "react-native"
-import { CircleUserRound, Clapperboard, LayoutGrid, Search } from "lucide-react-native"
+import { CircleUserRound, Clapperboard, LayoutGrid, Search, Tv, TvMinimal, TvMinimalPlay, User, UserRound } from "lucide-react-native"
 import { useTheme } from "../context/ThemeContext"
 import { LinearGradient } from "expo-linear-gradient"
 
 const icons = {
   Home: LayoutGrid,
   Search: Search,
-  Library: Clapperboard,
-  Profile: CircleUserRound
+  Library: TvMinimalPlay,
+  Profile: UserRound
 }
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
@@ -27,7 +27,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
               onPress={() => navigation.navigate(route.name)}
               style={[styles.button]}
             >
-              <Icon size={30} strokeWidth={focused ? 1.5 : 1.2} color={focused ? accentColor : theme.muted} />
+              <Icon size={30} strokeWidth={focused ? 1.8 : 1.4} color={focused ? accentColor : theme.muted} />
             </Pressable>
           )
         })
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-around",
     borderWidth: 0,
-    paddingBottom: 12
+    paddingBottom: 15
   },
   button: {
     width: 55,

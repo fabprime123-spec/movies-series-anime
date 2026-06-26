@@ -1,35 +1,28 @@
-import { StyleSheet } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { Text } from "../ui/Text"
-import { Container } from "../ui/Container"
 
-type Props = {
-  title: string
-}
-
-export function SectionHeader({ title }: Props) {
+export function SectionHeader({ title }: { title: string }) {
 
   return (
-    <Container
-      style={styles.container}
-    >
-      <Text
-        style={styles.text}
-      >
+    <View style={styles.container}>
+      <Text style={styles.text}>
         {title}
       </Text>
-    </Container>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 45,
     justifyContent: "center",
-    paddingHorizontal: 16,
-    backgroundColor: "transparent"
+    backgroundColor: "transparent",
+    paddingTop: 20,
+    paddingHorizontal: 10
   },
   text: {
     fontSize: 22,
-    fontWeight: "700"
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 2
   }
 })
