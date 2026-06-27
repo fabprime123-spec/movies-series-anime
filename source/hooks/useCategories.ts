@@ -4,7 +4,9 @@ import {
   getAnime,
   getDocumentaries,
   getKDrama,
-  getCDrama
+  getCDrama,
+  getJDrama,
+  getAsianDrama
 } from "../api/category.api";
 
 
@@ -60,4 +62,18 @@ export function useCDrama() {
 
   })
 
+}
+
+export function useJDrama() {
+  return useQuery({
+    queryKey: ["jdrama"],
+    queryFn: getJDrama
+  })
+}
+
+export function useAsianDrama() {
+  return useQuery({
+    queryKey: ["asian-drama"],
+    queryFn: getAsianDrama
+  })
 }

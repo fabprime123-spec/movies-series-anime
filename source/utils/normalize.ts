@@ -3,7 +3,7 @@ import { Movies } from "../types/movies.type"
 import { Series } from "../types/series.type"
 
 
-export function normalizeMovie(item: Movies): CardItem {
+export function normalizeMovies(item: Movies): CardItem {
   return {
     id: item.id,
     title: item.title,
@@ -37,4 +37,11 @@ export function normalizeTrending(item: any): CardItem {
     rating: item.vote_average,
     type: item.media_type === "movie" ? "movie" : "series"
   }
+}
+
+export function normalizeMedia(item: any): CardItem {
+  if (item.media_type === "movie" || item.title) {
+    return normalizeMovies(item)
+  }
+  return normalizeSeries(item)
 }

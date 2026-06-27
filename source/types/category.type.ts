@@ -1,10 +1,12 @@
-export type Category =
+export type ContentCategory =
   | "movie"
   | "series"
   | "anime"
+  | "animation"
   | "documentary"
   | "k_drama"
   | "c_drama"
+  | "j_drama"
   | "asian_drama"
-  | "animation"
-  | "mini_series"
+  | "reality"
+  | "short_film"

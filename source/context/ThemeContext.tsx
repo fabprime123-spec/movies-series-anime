@@ -9,13 +9,16 @@ interface ThemeContextType {
   accentColor: string
   changeMode: () => void
   changeAccent: (color: string) => void
+  blurTarget: any
+  setBlurTarget: (ref: any) => void
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<Mode>("dark")
-  const [accentColor, setAccentColor] = useState(accents.red)
+  const [accentColor, setAccentColor] = useState(accents.violet)
+  const [blurTarget, setBlurTarget] = useState<any>(null)
   const theme = mode === "dark" ? colors.dark : colors.light
 
   const changeMode = () => setMode((p) => p === "dark" ? "light" : "dark")
@@ -28,7 +31,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         mode,
         accentColor,
         changeMode,
-        changeAccent
+        changeAccent,
+        blurTarget,
+        setBlurTarget
       }}
     >
       {children}

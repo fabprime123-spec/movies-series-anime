@@ -1,21 +1,28 @@
 import { Image, Pressable, StyleSheet, View } from "react-native"
 import { CardItem } from "../../types/card.type"
 import { Text } from "../ui/Text"
+import { useNavigation, StackActions } from "@react-navigation/native"
+import React, { memo } from "react"
 
 interface Props {
   item: CardItem
   onPress?: () => void
 }
 
-export function PosterCard({
+export const PosterCard = memo(function PosterCard({
   item,
   onPress
 }: Props) {
+  const navigation = useNavigation()
+
+  const handlePress = onPress || (() => {
+    navigation.dispatch(StackActions.push("Details", { id: item.id, type: item.type }))
+  })
 
   return (
     <Pressable
       style={styles.card}
-      onPress={onPress}
+      onPress={handlePress}
     >
       <Image
         source={{
@@ -38,7 +45,7 @@ export function PosterCard({
       </View>
     </Pressable>
   )
-}
+})
 
 const styles = StyleSheet.create({
   card: {
