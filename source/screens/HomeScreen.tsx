@@ -240,25 +240,17 @@ export function HomeScreen() {
   return (
     <Container>
       <View style={styles.headerContainer}>
-        {blurTarget?.current ? (
-          <BlurView
-            intensity={mode === "dark" ? 50 : 75}
-            tint={mode === "dark" ? "dark" : "light"}
-            blurMethod="dimezisBlurView"
-            blurTarget={blurTarget}
-            style={[StyleSheet.absoluteFill, { backgroundColor: mode === "dark" ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.5)" }]}
-          />
-        ) : (
-          <LinearGradient
-            colors={[
-              `rgba(${baseColor}, 0.92)`,
-              `rgba(${baseColor}, 0.72)`,
-              `rgba(${baseColor}, 0.28)`,
-              "transparent"
-            ]}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
+
+        <LinearGradient
+          colors={[
+            `rgba(${baseColor}, 0.92)`,
+            `rgba(${baseColor}, 0.72)`,
+            `rgba(${baseColor}, 0.28)`,
+            "transparent"
+          ]}
+          style={StyleSheet.absoluteFill}
+        />
+
         <View style={styles.headerContentWrapper}>
           <View style={styles.headerLeft}>
             <Film size={22} color={accentColor} />

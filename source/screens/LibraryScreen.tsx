@@ -228,20 +228,12 @@ export function LibraryScreen() {
   return (
     <Container>
       <View style={styles.headerContainer}>
-        {blurTarget?.current ? (
-          <BlurView
-            intensity={mode === "dark" ? 50 : 75}
-            tint={mode === "dark" ? "dark" : "light"}
-            blurMethod="dimezisBlurView"
-            blurTarget={blurTarget}
-            style={[StyleSheet.absoluteFill, { backgroundColor: mode === "dark" ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.5)" }]}
-          />
-        ) : (
-          <LinearGradient
-            colors={[theme.background, theme.background + "dd", theme.background + "bb", theme.background + "88", theme.background + "66", "transparent"]}
-            style={StyleSheet.absoluteFill}
-          />
-        )}
+
+        <LinearGradient
+          colors={[theme.background, theme.background + "dd", theme.background + "bb", theme.background + "88", theme.background + "66", "transparent"]}
+          style={StyleSheet.absoluteFill}
+        />
+
         <View style={styles.headerContentWrapper}>
           <View style={styles.headerLeft}>
             <Film size={22} color={accentColor} />
