@@ -1,6 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin"
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from "firebase/auth"
+import { firebaseAuth } from "../config/firebase"
+import { useMediaStore } from "../store/media.store"
 
+// ─── Types ────────────────────────────────────────────────────
 export interface GoogleUser {
   id: string
   name: string | null
@@ -14,46 +25,87 @@ interface AuthContextType {
   user: GoogleUser | null
   isLoading: boolean
   isAuthenticated: boolean
-  loginWithGoogle: (userInfo: GoogleUser) => Promise<void>
+  signInWithGoogle: () => Promise<void>
   loginAsGuest: () => Promise<void>
   logout: () => Promise<void>
+  /** @deprecated Use signInWithGoogle instead */
+  loginWithGoogle: (userInfo: GoogleUser) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
+const GUEST_STORAGE_KEY = "@fabprime_guest_session"
 
-const AUTH_STORAGE_KEY = "@fabprime_auth_session"
+// ─── Configure Google Sign-In ─────────────────────────────────
+// IMPORTANT: Replace this with your actual Web Client ID from Firebase Console
+// (Settings → General → Your apps → Web app → Client ID)
+GoogleSignin.configure({
+  webClientId: "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com",
+})
 
+// ─── Provider ─────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<GoogleUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Load any saved user session when the app starts up
-    async function loadSavedSession() {
-      try {
-        const savedData = await AsyncStorage.getItem(AUTH_STORAGE_KEY)
-        if (savedData) {
-          setUser(JSON.parse(savedData))
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const googleUser: GoogleUser = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName,
+          email: firebaseUser.email ?? "",
+          photo: firebaseUser.photoURL,
+          idToken: null,
+          isGuest: false,
         }
-      } catch (error) {
-        console.error("Failed to load auth session", error)
-      } finally {
-        setIsLoading(false)
+        setUser(googleUser)
+        // Load this user's cloud data into the store
+        useMediaStore.getState().loadFromCloud(firebaseUser.uid)
+      } else {
+        try {
+          const saved = await AsyncStorage.getItem(GUEST_STORAGE_KEY)
+          if (saved) {
+            setUser(JSON.parse(saved))
+          } else {
+            setUser(null)
+          }
+        } catch {
+          setUser(null)
+        }
       }
-    }
-    loadSavedSession()
+      setIsLoading(false)
+    })
+
+    return unsubscribe
   }, [])
 
-  const loginWithGoogle = async (userInfo: GoogleUser) => {
+  // ── Real Google Sign-In ──────────────────────────────────────
+  const signInWithGoogle = async () => {
     try {
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userInfo))
-      setUser(userInfo)
-    } catch (error) {
-      console.error("Failed to save Google auth session", error)
-      throw error;
+      await GoogleSignin.hasPlayServices()
+      const { data } = await GoogleSignin.signIn()
+      const idToken = data?.idToken
+      if (!idToken) throw new Error("No ID token returned from Google")
+
+      // Exchange the Google token for a Firebase credential
+      const credential = GoogleAuthProvider.credential(idToken)
+      await signInWithCredential(firebaseAuth, credential)
+      // onAuthStateChanged above will update the user state automatically
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        console.log("User cancelled Google sign-in")
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        console.log("Sign-in already in progress")
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        console.log("Play services not available")
+      } else {
+        console.error("Google sign-in error:", error)
+        throw error
+      }
     }
   }
 
+  // ── Guest Sign-In (local only, no cloud sync) ─────────────────
   const loginAsGuest = async () => {
     const guestUser: GoogleUser = {
       id: "guest_" + Math.random().toString(36).substr(2, 9),
@@ -61,25 +113,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: "guest@fabprime.com",
       photo: null,
       idToken: null,
-      isGuest: true
+      isGuest: true,
     }
-    try {
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(guestUser))
-      setUser(guestUser)
-    } catch (error) {
-      console.error("Failed to save Guest session", error)
-      throw error;
-    }
+    await AsyncStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify(guestUser))
+    setUser(guestUser)
   }
 
+  // ── Legacy shim (kept for backward compat) ────────────────────
+  const loginWithGoogle = async (userInfo: GoogleUser) => {
+    setUser(userInfo)
+  }
+
+  // ── Logout ────────────────────────────────────────────────────
   const logout = async () => {
     try {
-      // Clear the locally saved user info
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY)
+      if (firebaseAuth.currentUser) {
+        await firebaseSignOut(firebaseAuth)
+        try { await GoogleSignin.signOut() } catch {}
+      }
+      await AsyncStorage.removeItem(GUEST_STORAGE_KEY)
+      // Clear the local store so the next user starts fresh
+      useMediaStore.getState().clearUserData()
       setUser(null)
-
     } catch (error) {
-      console.error("Error signing out user", error)
+      console.error("Logout error:", error)
     }
   }
 
@@ -89,9 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
-        loginWithGoogle,
+        signInWithGoogle,
         loginAsGuest,
-        logout
+        logout,
+        loginWithGoogle,
       }}
     >
       {children}
@@ -101,8 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth must be used inside an AuthProvider")
-  }
+  if (!context) throw new Error("useAuth must be used inside an AuthProvider")
   return context
 }

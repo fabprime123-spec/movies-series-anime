@@ -1,17 +1,17 @@
-import { View, Image, TouchableOpacity, StyleSheet, FlatList } from "react-native"
+import { View, Image, TouchableOpacity, StyleSheet, FlatList, Platform, ScrollView, Pressable } from "react-native"
 import { Container } from "../components/ui/Container"
 import { MediaSlider } from "../components/sliders/MediaSlider"
 import { SectionHeader } from "../components/headers/SectionHeader"
 import { useTheme } from "../context/ThemeContext"
 import { useAuth } from "../context/AuthContext"
 import { LinearGradient } from "expo-linear-gradient"
-import { BlurView } from "expo-blur"
 import { useNavigation, StackActions } from "@react-navigation/native"
 import { Play, Plus, User, Search, Bell, Star, Film } from "lucide-react-native"
 import { Text } from "../components/ui/Text"
 import { useMemo } from "react"
 import { MovieHub } from "../components/Home/MovieHub"
 import { SeriesHub } from "../components/Home/SeriesHub"
+import { useSettingsStore } from "../store/settings.store"
 
 import {
   useNowPlayingMovies,
@@ -48,6 +48,47 @@ export function HomeScreen() {
   const navigation = useNavigation<any>()
   const { theme, mode, accentColor, blurTarget } = useTheme()
   const { user } = useAuth()
+  const {
+    excludedCountries,
+    filterLanguage,
+    selectedPlatforms,
+    filterYear
+  } = useSettingsStore()
+
+  // Apply all content filters (excluding countries, platforms, language, year)
+  const applyGlobalFilters = (list: any[]) => {
+    return list.filter(item => {
+      // 1. Excluded countries check
+      if (item.countries && item.countries.some((code: string) => excludedCountries.includes(code))) {
+        return false
+      }
+
+      // 2. Original language check
+      if (filterLanguage !== "All" && item.original_language !== filterLanguage) {
+        return false
+      }
+
+      // 3. Platform check
+      if (item.platform && !selectedPlatforms.includes(item.platform)) {
+        return false
+      }
+
+      // 4. Release year check
+      if (filterYear !== "All") {
+        if (filterYear === "2020+") {
+          const y = parseInt(item.release_year)
+          if (isNaN(y) || y < 2020) return false
+        } else if (filterYear === "2010+") {
+          const y = parseInt(item.release_year)
+          if (isNaN(y) || y < 2010) return false
+        } else {
+          if (item.release_year !== filterYear) return false
+        }
+      }
+
+      return true
+    })
+  }
 
   // Movies queries
   const { data: nowPlayingMovies = [] } = useNowPlayingMovies()
@@ -96,51 +137,52 @@ export function HomeScreen() {
   // Pre-normalized datasets to pass as props to MovieHub and SeriesHub
   const normalizedMoviesData = useMemo(() => {
     return {
-      nowPlaying: nowPlayingMovies.map(normalizeMovies),
-      popular: popularMovies.map(normalizeMovies),
-      topRated: topRatedMovies.map(normalizeMovies),
-      upcoming: upcomingMovies.map(normalizeMovies)
+      nowPlaying: applyGlobalFilters(nowPlayingMovies.map(normalizeMovies)),
+      popular: applyGlobalFilters(popularMovies.map(normalizeMovies)),
+      topRated: applyGlobalFilters(topRatedMovies.map(normalizeMovies)),
+      upcoming: applyGlobalFilters(upcomingMovies.map(normalizeMovies))
     }
-  }, [nowPlayingMovies, popularMovies, topRatedMovies, upcomingMovies])
+  }, [nowPlayingMovies, popularMovies, topRatedMovies, upcomingMovies, excludedCountries, filterLanguage, selectedPlatforms, filterYear])
 
   const normalizedSeriesData = useMemo(() => {
     return {
-      airingToday: airingTodaySeries.map(normalizeSeries),
-      popular: popularSeries.map(normalizeSeries),
-      topRated: topRatedSeries.map(normalizeSeries),
-      onTheAir: onTheAirSeries.map(normalizeSeries)
+      airingToday: applyGlobalFilters(airingTodaySeries.map(normalizeSeries)),
+      popular: applyGlobalFilters(popularSeries.map(normalizeSeries)),
+      topRated: applyGlobalFilters(topRatedSeries.map(normalizeSeries)),
+      onTheAir: applyGlobalFilters(onTheAirSeries.map(normalizeSeries))
     }
-  }, [airingTodaySeries, popularSeries, topRatedSeries, onTheAirSeries])
+  }, [airingTodaySeries, popularSeries, topRatedSeries, onTheAirSeries, excludedCountries, filterLanguage, selectedPlatforms, filterYear])
 
   // Use useMemo to cache computed and normalized data
   const computedSections = useMemo(() => {
-    const kdramas = kdrama.map(normalizeSeries)
-    const cdramas = cdrama.map(normalizeSeries)
-    const jdramas = jdrama.map(normalizeSeries)
-    const asianDramas = asianDrama.map(normalizeSeries)
-    const animes = anime.map(normalizeSeries)
-    const docs = documentary.map(normalizeMedia)
+    const kdramas = applyGlobalFilters(kdrama.map(normalizeSeries))
+    const cdramas = applyGlobalFilters(cdrama.map(normalizeSeries))
+    const jdramas = applyGlobalFilters(jdrama.map(normalizeSeries))
+    const asianDramas = applyGlobalFilters(asianDrama.map(normalizeSeries))
+    const animes = applyGlobalFilters(anime.map(normalizeSeries))
+    const docs = applyGlobalFilters(documentary.map(normalizeMedia))
 
-    const animation = deduplicate([
+    const animation = applyGlobalFilters(deduplicate([
       ...animMovies.map(normalizeMovies),
       ...animSeries.map(normalizeSeries)
-    ])
-    const fantasy = deduplicate([
+    ]))
+    const fantasy = applyGlobalFilters(deduplicate([
       ...fanMovies.map(normalizeMovies),
       ...fanSeries.map(normalizeSeries)
-    ])
-    const music = deduplicate([
+    ]))
+    const music = applyGlobalFilters(deduplicate([
       ...musMovies.map(normalizeMovies),
       ...musSeries.map(normalizeSeries)
-    ])
-    const scifi = deduplicate([
+    ]))
+    const scifi = applyGlobalFilters(deduplicate([
       ...sciMovies.map(normalizeMovies),
       ...sciSeries.map(normalizeSeries)
-    ])
+    ]))
 
     return [
       { type: "movie_hub" },
       { type: "series_hub" },
+      { type: "continue_watching" },
       { title: "K-Drama", data: kdramas, cardType: "poster" },
       { title: "C-Drama", data: cdramas, cardType: "poster" },
       { title: "J-Drama", data: jdramas, cardType: "poster" },
@@ -154,24 +196,25 @@ export function HomeScreen() {
     ].filter(section => section.type || (section.data && section.data.length > 0))
   }, [
     kdrama, cdrama, jdrama, asianDrama, anime, documentary,
-    animMovies, animSeries, fanMovies, fanSeries, musMovies, musSeries, sciMovies, sciSeries
+    animMovies, animSeries, fanMovies, fanSeries, musMovies, musSeries, sciMovies, sciSeries,
+    excludedCountries, filterLanguage, selectedPlatforms, filterYear
   ])
 
   const featuredItem = useMemo(() => {
-    const trendingList = trendingData.map(normalizeTrending)
+    const trendingList = applyGlobalFilters(trendingData.map(normalizeTrending))
     return trendingList[0] || null
-  }, [trendingData])
+  }, [trendingData, excludedCountries, filterLanguage, selectedPlatforms, filterYear])
 
   const renderHeroBanner = () => {
     if (!featuredItem) return null
     return (
       <View style={[styles.heroContainer, { borderColor: theme.border }]}>
         <Image
-          source={{ uri: `https://image.tmdb.org/t/p/w780${featuredItem.backdrop || featuredItem.poster}` }}
+          source={{ uri: `https://image.tmdb.org/t/p/original${featuredItem.backdrop || featuredItem.poster}` }}
           style={styles.heroImage}
         />
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.8)", theme.background, theme.background]}
+          colors={["transparent", "rgba(0,0,0,0.8)", theme.background]}
           style={styles.heroGradient}
         />
         <View style={styles.heroContent}>
@@ -227,6 +270,74 @@ export function HomeScreen() {
         />
       )
     }
+    if (item.type === "continue_watching") {
+      const continueWatchingList = [
+        {
+          id: 550,
+          title: "Fight Club",
+          backdrop: "/f7RISK24zT2Vl5E9I32v294yF0d.jpg",
+          type: "movie",
+          progress: 0.65,
+          subtitle: "44m left"
+        },
+        {
+          id: 1396,
+          title: "Breaking Bad",
+          backdrop: "/9fa5tG2c27V1Q2O1hG8jT10b904.jpg",
+          type: "series",
+          progress: 0.82,
+          subtitle: "S3:E8 • 8m left"
+        },
+        {
+          id: 299534,
+          title: "Avengers: Endgame",
+          backdrop: "/7RyGsL12Z67v77j7W1A4d914Y0d.jpg",
+          type: "movie",
+          progress: 0.28,
+          subtitle: "1h 55m left"
+        }
+      ]
+
+      return (
+        <View style={styles.section}>
+          <SectionHeader title="Continue Watching" />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.continueWatchingScroll}
+          >
+            {continueWatchingList.map((media) => (
+              <Pressable
+                key={media.id}
+                style={[styles.continueCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+                onPress={() => navigation.dispatch(StackActions.push("Details", { id: media.id, type: media.type }))}
+              >
+                <View style={{ position: "relative" }}>
+                  <Image
+                    source={{ uri: `https://image.tmdb.org/t/p/w500${media.backdrop}` }}
+                    style={styles.continueBackdrop}
+                  />
+                  {/* Play Button Overlay */}
+                  <View style={styles.playOverlay}>
+                    <View style={[styles.miniPlayCircle, { backgroundColor: accentColor }]}>
+                      <Play size={10} color="#FFF" fill="#FFF" />
+                    </View>
+                  </View>
+                </View>
+                {/* Progress bar and text */}
+                <View style={styles.continueMeta}>
+                  <Text style={[styles.continueTitle, { color: theme.foreground }]} numberOfLines={1}>{media.title}</Text>
+                  <Text style={[styles.continueSubtitle, { color: theme.muted }]}>{media.subtitle}</Text>
+                </View>
+                <View style={[styles.progressBarContainer, { backgroundColor: `${theme.foreground}20` }]}>
+                  <View style={[styles.progressBar, { width: `${media.progress * 100}%`, backgroundColor: accentColor }]} />
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )
+    }
     return (
       <View style={styles.section}>
         <SectionHeader title={item.title} />
@@ -235,19 +346,13 @@ export function HomeScreen() {
     )
   }
 
-  const isDark = theme.background === "#000000"
-  const baseColor = isDark ? "0,0,0" : "255,255,255"
+  const activeBlurMethod = (blurTarget && blurTarget.current) ? "dimezisBlurView" : "none"
+
   return (
     <Container>
       <View style={styles.headerContainer}>
-
         <LinearGradient
-          colors={[
-            `rgba(${baseColor}, 0.92)`,
-            `rgba(${baseColor}, 0.72)`,
-            `rgba(${baseColor}, 0.28)`,
-            "transparent"
-          ]}
+          colors={[theme.background, `${theme.background}E6`, "transparent"]}
           style={StyleSheet.absoluteFill}
         />
 
@@ -258,21 +363,21 @@ export function HomeScreen() {
           </View>
           <View style={styles.headerRight}>
             <TouchableOpacity
-              style={[styles.headerBtn, { backgroundColor: theme.card }]}
+              style={[styles.headerBtn, { backgroundColor: theme.card + "aa" }]}
               onPress={() => navigation.navigate("Search" as any)}
               activeOpacity={0.7}
             >
               <Search size={18} color={theme.foreground} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.headerBtn, { backgroundColor: theme.card }]}
+              style={[styles.headerBtn, { backgroundColor: theme.card + "aa" }]}
               activeOpacity={0.7}
             >
               <Bell size={18} color={theme.foreground} />
               <View style={[styles.notificationDot, { backgroundColor: accentColor, borderColor: theme.background }]} />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.headerBtn, { backgroundColor: theme.card, overflow: "hidden" }]}
+              style={[styles.headerBtn, { backgroundColor: theme.card + "aa", overflow: "hidden" }]}
               onPress={() => navigation.navigate("Profile" as any)}
               activeOpacity={0.7}
             >
@@ -292,7 +397,7 @@ export function HomeScreen() {
         renderItem={renderSectionSlider}
         keyExtractor={(item, index) => item.type ? item.type : `${item.title}-${index}`}
         ListHeaderComponent={renderHeroBanner}
-        contentContainerStyle={[styles.scrollContent, { paddingTop: 64 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 72 }]}
         showsVerticalScrollIndicator={false}
         initialNumToRender={3}
         maxToRenderPerBatch={2}
@@ -309,9 +414,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 72,
+    height: 60,
     zIndex: 10,
-    overflow: "hidden",
   },
   headerContentWrapper: {
     flex: 1,
@@ -319,7 +423,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingVertical: 0,
   },
   headerLeft: {
     flexDirection: "row",
@@ -361,7 +465,7 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   section: {
-    marginBottom: 10,
+    marginBottom: 5,
   },
   heroContainer: {
     width: "100%",
@@ -369,8 +473,8 @@ const styles = StyleSheet.create({
     position: "relative",
     borderRadius: 16,
     overflow: "hidden",
-    marginTop: 8,
-    marginBottom: 12,
+    marginTop: 0,
+    marginBottom: 0,
     borderWidth: 1,
   },
   heroImage: {
@@ -440,5 +544,60 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 13,
     fontFamily: "GeneralSans-Bold",
+  },
+  continueWatchingScroll: {
+    paddingHorizontal: 16,
+    gap: 14,
+    paddingBottom: 0,
+    paddingTop: 10
+  },
+  continueCard: {
+    width: 200,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+  },
+  continueBackdrop: {
+    width: "100%",
+    height: 110,
+    resizeMode: "cover",
+  },
+  playOverlay: {
+    ...StyleSheet.absoluteFill,
+    height: 110,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.15)",
+  },
+  miniPlayCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  continueMeta: {
+    padding: 10,
+  },
+  continueTitle: {
+    fontSize: 13,
+    fontFamily: "GeneralSans-Semibold",
+  },
+  continueSubtitle: {
+    fontSize: 11,
+    fontFamily: "GeneralSans-Medium",
+    marginTop: 2,
+  },
+  progressBarContainer: {
+    height: 3,
+    width: "100%",
+  },
+  progressBar: {
+    height: "100%",
   }
 })

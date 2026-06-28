@@ -7,8 +7,8 @@ import { LinearGradient } from "expo-linear-gradient"
 import { BlurView } from "expo-blur"
 
 // Custom 2x2 Grid Icon: top-right is a circle, others are squares (balanced and sized correctly)
-function CustomGridIcon({ size, color }: { size: number; color: string }) {
-  const gridBoxSize = size * 0.8 // Balanced ~18px box within 28px container
+function CustomGridIcon({ size, color, fill = "#ff00ff00" }: { size: number; color: string, fill?: string }) {
+  const gridBoxSize = size * 0.85 // Balanced ~18px box within 28px container
   const itemSize = (gridBoxSize - 1.5) / 2
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
@@ -23,23 +23,23 @@ function CustomGridIcon({ size, color }: { size: number; color: string }) {
         }}
       >
         {/* Top Left: Square */}
-        <View style={{ width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: 2 }} />
+        <View style={{ backgroundColor: fill, width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: 2 }} />
         {/* Top Right: Circle */}
-        <View style={{ width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: itemSize / 2 }} />
+        <View style={{ backgroundColor: fill, width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: itemSize / 2 }} />
         {/* Bottom Left: Square */}
-        <View style={{ width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: 2 }} />
+        <View style={{ backgroundColor: fill, width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: 2 }} />
         {/* Bottom Right: Square */}
-        <View style={{ width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: 2 }} />
+        <View style={{ backgroundColor: fill, width: itemSize, height: itemSize, borderWidth: 1.8, borderColor: color, borderRadius: 2 }} />
       </View>
     </View>
   )
 }
 
 // Custom User Icon: balanced head, body, and exact baseline shoulders
-function CustomUserIcon({ size, color }: { size: number; color: string }) {
-  const headSize = size * 0.4 // Balanced head size
-  const bodyWidth = size * 0.84 // Stretched wide body / shoulders
-  const bodyHeight = size * 0.3
+function CustomUserIcon({ size, color, fill = "#ff00ff00" }: { size: number; color: string, fill?: string }) {
+  const headSize = size * 0.43 // Balanced head size
+  const bodyWidth = size * 0.9 // Stretched wide body / shoulders
+  const bodyHeight = size * 0.35
   const lineWidth = bodyWidth // Baseline matches shoulder width exactly
 
   return (
@@ -53,6 +53,7 @@ function CustomUserIcon({ size, color }: { size: number; color: string }) {
           borderWidth: 1.8,
           borderColor: color,
           marginBottom: 2,
+          backgroundColor: fill
         }}
       />
       {/* Body / Shoulders */}
@@ -65,6 +66,7 @@ function CustomUserIcon({ size, color }: { size: number; color: string }) {
           borderTopLeftRadius: bodyWidth * 0.4, // smooth wide shoulders curvature
           borderTopRightRadius: bodyWidth * 0.4,
           borderBottomWidth: 0,
+          backgroundColor: fill
         }}
       />
       {/* Horizontal Baseline */}
@@ -253,7 +255,7 @@ const styles = StyleSheet.create({
   },
   shadowWrapper: {
     width: "95%",
-    height: 64,
+    height: 70,
     borderRadius: 29,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.15,
@@ -269,6 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     paddingHorizontal: 8,
     overflow: "hidden",
+    paddingBottom: 5,
   },
   button: {
     width: 58,

@@ -20,6 +20,8 @@ interface Props {
   onClearRecent: () => void
   trending: CardItem[]
   isLoadingTrending: boolean
+  contentContainerStyle?: any
+  onSurpriseMe: (id: number, type: "movie" | "series") => void
 }
 
 const CATEGORIES = [
@@ -41,7 +43,9 @@ export function SearchEmpty({
   onRemoveRecent,
   onClearRecent,
   trending,
-  isLoadingTrending
+  isLoadingTrending,
+  contentContainerStyle,
+  onSurpriseMe
 }: Props) {
   const { theme, accentColor } = useTheme()
 
@@ -59,10 +63,31 @@ export function SearchEmpty({
   return (
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, contentContainerStyle]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
+      {/* Surprise Me Banner */}
+      {hasTrending && (
+        <TouchableOpacity
+          style={[styles.surpriseCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          onPress={() => {
+            const randomItem = trending[Math.floor(Math.random() * trending.length)]
+            if (randomItem) {
+              onSurpriseMe(randomItem.id, randomItem.type)
+            }
+          }}
+          activeOpacity={0.8}
+        >
+          <View style={styles.surpriseLeft}>
+            <Text style={[styles.surpriseTitle, { color: theme.foreground }]}>Can't decide? 🎲</Text>
+            <Text style={[styles.surpriseSub, { color: theme.muted }]}>Let us surprise you with a random trending movie or show!</Text>
+          </View>
+          <View style={[styles.surpriseBtn, { backgroundColor: accentColor }]}>
+            <Text style={styles.surpriseBtnText}>Spin</Text>
+          </View>
+        </TouchableOpacity>
+      )}
       {/* 1. Recent Searches */}
       {hasRecent && (
         <View style={styles.section}>
@@ -164,9 +189,10 @@ export function SearchEmpty({
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
+    paddingHorizontal: 16
   },
   contentContainer: {
-    paddingTop: 16,
+    paddingTop: 0,
     paddingBottom: 100,
     gap: 28,
   },
@@ -266,5 +292,40 @@ const styles = StyleSheet.create({
     fontFamily: "GeneralSans-Regular",
     textAlign: "center",
     lineHeight: 20,
+  },
+  surpriseCard: {
+    marginHorizontal: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  surpriseLeft: {
+    flex: 1,
+  },
+  surpriseTitle: {
+    fontSize: 15,
+    fontFamily: "GeneralSans-Bold",
+  },
+  surpriseSub: {
+    fontSize: 12,
+    fontFamily: "GeneralSans-Medium",
+    marginTop: 4,
+    lineHeight: 16,
+  },
+  surpriseBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  surpriseBtnText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontFamily: "GeneralSans-Bold",
   }
 })

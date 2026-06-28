@@ -28,9 +28,9 @@ export function SearchBar({
       style={[
         styles.container,
         {
-          backgroundColor: theme.card,
           borderColor: isFocused ? accentColor : theme.border,
-          borderWidth: 1
+          borderWidth: 1,
+          backgroundColor: theme.background
         }
       ]}
     >
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
-    marginBottom: 0
+    marginTop: 1
   },
   icon: {
     fontSize: 18,

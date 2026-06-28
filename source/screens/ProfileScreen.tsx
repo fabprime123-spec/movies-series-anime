@@ -4,265 +4,253 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  ImageBackground,
 } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { useNavigation } from "@react-navigation/native"
-import {
-  Bookmark,
-  ChevronRight,
-  Clock,
-  Download,
-  Heart,
-  HelpCircle,
-  LogOut,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  User,
-} from "lucide-react-native"
 import { Container } from "../components/ui/Container"
 import { Text } from "../components/ui/Text"
-import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
-
-type MenuRowProps = {
-  icon: React.ComponentType<any>
-  title: string
-  subtitle: string
-  color: string
-  surface: string
-  muted: string
-  onPress?: () => void
-  danger?: boolean
-}
+import { useAuth } from "../context/AuthContext"
+import { useMediaStore } from "../store/media.store"
+import { useNavigation } from "@react-navigation/native"
+import {
+  User,
+  Settings,
+  Bookmark,
+  Download,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+  Sparkles,
+  Mail,
+  UserCheck,
+  Award,
+  Film,
+  Heart,
+  History,
+} from "lucide-react-native"
+import { LinearGradient } from "expo-linear-gradient"
 
 export function ProfileScreen() {
   const { theme, accentColor } = useTheme()
   const { user, logout } = useAuth()
   const navigation = useNavigation<any>()
+  const { favorites, watchlist, history } = useMediaStore()
+
   const displayName = user?.name || "Guest Fan"
   const displayEmail = user?.email || "guest@fabprime.com"
-  const firstName = displayName.split(" ")[0]
+  const username = `@${displayName.toLowerCase().replace(/\s+/g, "")}`
 
   return (
     <Container>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity
-          style={[styles.headerBtn, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate("Settings")}
-          activeOpacity={0.7}
-        >
-          <Settings size={20} color={theme.foreground} />
-        </TouchableOpacity>
+      {/* Sticky Glassmorphic Header */}
+      <View style={styles.headerContainer}>
+        <LinearGradient
+          colors={[theme.background, `${theme.background}E6`, "transparent"]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.headerContentWrapper}>
+          <Text style={[styles.headerTitle, { color: theme.foreground }]}>My Profile</Text>
+          <TouchableOpacity
+            style={[styles.headerBtn, { backgroundColor: theme.card }]}
+            onPress={() => navigation.navigate("Settings")}
+            activeOpacity={0.7}
+          >
+            <Settings size={18} color={theme.foreground} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <ImageBackground
-          source={require("../../assets/poster-default.png")}
-          imageStyle={styles.heroImage}
-          style={[styles.heroCard, { borderColor: theme.border }]}
+        {/* Glowing Profile Header section */}
+        <LinearGradient
+          colors={[theme.card, `${accentColor}1A`, theme.card]}
+          style={styles.telegramHeader}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
         >
-          <LinearGradient
-            colors={["rgba(0,0,0,0.1)", "rgba(0,0,0,0.62)", "rgba(0,0,0,0.92)"]}
-            style={styles.heroOverlay}
-          >
-            <View style={styles.heroTopRow}>
-              <View style={[styles.statusPill, { backgroundColor: `${accentColor}22`, borderColor: `${accentColor}66` }]}>
-                <ShieldCheck size={14} color={accentColor} />
-                <Text style={styles.statusText}>{user?.isGuest ? "Guest Profile" : "Member Profile"}</Text>
-              </View>
-              <View style={[styles.sparkBox, { backgroundColor: `${accentColor}24` }]}>
-                <Sparkles size={17} color={accentColor} />
-              </View>
-            </View>
-
-            <View style={styles.heroUserRow}>
-              <View style={[styles.avatarWrapper, { borderColor: accentColor }]}>
-                <View style={[styles.avatar, { backgroundColor: theme.surface }]}>
-                  {user?.photo ? (
-                    <Image source={{ uri: user.photo }} style={styles.avatarImage} />
-                  ) : (
-                    <User size={38} color={accentColor} />
-                  )}
+          {/* User Details */}
+          <View style={styles.profileMeta}>
+            <View style={[styles.avatarWrapper, { borderColor: accentColor }]}>
+              {user?.photo ? (
+                <Image source={{ uri: user.photo }} style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: `${accentColor}1A` }]}>
+                  <User size={48} color={accentColor} />
                 </View>
-              </View>
-
-              <View style={styles.userInfo}>
-                <Text style={styles.kicker}>Welcome back</Text>
-                <Text style={styles.userName} numberOfLines={1}>{firstName}</Text>
-                <Text style={styles.userEmail} numberOfLines={1}>{displayEmail}</Text>
-              </View>
+              )}
             </View>
-          </LinearGradient>
-        </ImageBackground>
-
-        <View style={[styles.planCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <LinearGradient
-            colors={[`${accentColor}26`, "transparent"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.planGlow}
-          />
-          <View style={styles.planLeft}>
-            <View style={[styles.planIcon, { backgroundColor: `${accentColor}18` }]}>
-              <Star size={20} color={accentColor} fill={accentColor} />
+            <View style={styles.nameSection}>
+              <View style={styles.nameRow}>
+                <Text style={[styles.displayName, { color: theme.foreground }]}>{displayName}</Text>
+                {!user?.isGuest && (
+                  <View style={[styles.proBadge, { backgroundColor: accentColor }]}>
+                    <Sparkles size={10} color="#FFF" />
+                    <Text style={styles.proText}>PRO</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.statusText}>online</Text>
             </View>
-            <View style={styles.planCopy}>
-              <Text style={styles.planTitle}>{user?.isGuest ? "Start your watch profile" : "FabPrime Plus"}</Text>
-              <Text style={[styles.planSubtitle, { color: theme.muted }]}>
-                {user?.isGuest ? "Save favorites, lists, and viewing history." : "Your personal cinema hub is active."}
+          </View>
+        </LinearGradient>
+
+        {/* Telegram Info Section */}
+        <View style={[styles.telegramSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.sectionTitle, { color: accentColor }]}>Info</Text>
+
+          {/* Email row */}
+          <View style={styles.infoRow}>
+            <Mail size={18} color={theme.muted} style={styles.infoIcon} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoValue, { color: theme.foreground }]}>{displayEmail}</Text>
+              <Text style={[styles.infoLabel, { color: theme.muted }]}>Email Address</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+          {/* Username row */}
+          <View style={styles.infoRow}>
+            <UserCheck size={18} color={theme.muted} style={styles.infoIcon} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoValue, { color: theme.foreground }]}>{username}</Text>
+              <Text style={[styles.infoLabel, { color: theme.muted }]}>Username</Text>
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+          {/* Subscription status */}
+          <View style={styles.infoRow}>
+            <Award size={18} color={theme.muted} style={styles.infoIcon} />
+            <View style={styles.infoContent}>
+              <Text style={[styles.infoValue, { color: theme.foreground }]}>
+                {user?.isGuest ? "Free Tier" : "FabPrime Plus Membership"}
               </Text>
+              <Text style={[styles.infoLabel, { color: theme.muted }]}>Subscription Status</Text>
             </View>
           </View>
-          <View style={[styles.planBadge, { backgroundColor: accentColor }]}>
-            <Text style={styles.planBadgeText}>{user?.isGuest ? "FREE" : "ACTIVE"}</Text>
-          </View>
         </View>
 
-        <View style={[styles.statsContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          {[
-            { value: "148", label: "Watched", icon: Clock },
-            { value: "42", label: "Watchlist", icon: Bookmark },
-            { value: "56", label: "Liked", icon: Heart },
-          ].map((item, index) => {
-            const Icon = item.icon
-            return (
-              <View key={item.label} style={styles.statItem}>
-                <View style={[styles.statIcon, { backgroundColor: `${accentColor}16` }]}>
-                  <Icon size={16} color={accentColor} />
-                </View>
-                <Text style={styles.statValue}>{item.value}</Text>
-                <Text style={[styles.statLabel, { color: theme.muted }]}>{item.label}</Text>
-                {index < 2 && <View style={[styles.statDivider, { backgroundColor: theme.border }]} />}
-              </View>
-            )
-          })}
+        {/* Profile Statistics Dashboard Grid */}
+        <View style={styles.statsGrid}>
+          <TouchableOpacity style={[styles.statCellCard, { backgroundColor: theme.card, borderColor: theme.border }]} activeOpacity={0.7}>
+            <View style={[styles.statIconBox, { backgroundColor: `${accentColor}12` }]}>
+              <History size={18} color={accentColor} />
+            </View>
+            <Text style={[styles.statGridNumber, { color: theme.foreground }]}>{history.length}</Text>
+            <Text style={[styles.statGridLabel, { color: theme.muted }]}>History</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.statCellCard, { backgroundColor: theme.card, borderColor: theme.border }]} activeOpacity={0.7} onPress={() => navigation.navigate("Library")}>
+            <View style={[styles.statIconBox, { backgroundColor: `${accentColor}12` }]}>
+              <Bookmark size={18} color={accentColor} />
+            </View>
+            <Text style={[styles.statGridNumber, { color: theme.foreground }]}>{watchlist.length}</Text>
+            <Text style={[styles.statGridLabel, { color: theme.muted }]}>Watchlist</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.statCellCard, { backgroundColor: theme.card, borderColor: theme.border }]} activeOpacity={0.7}>
+            <View style={[styles.statIconBox, { backgroundColor: `${accentColor}12` }]}>
+              <Heart size={18} color="#FF6B6B" />
+            </View>
+            <Text style={[styles.statGridNumber, { color: theme.foreground }]}>{favorites.length}</Text>
+            <Text style={[styles.statGridLabel, { color: theme.muted }]}>Liked</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {/* Library Section */}
+        <View style={[styles.telegramSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>Library</Text>
-          <MenuRow icon={Bookmark} title="Watchlist Manager" subtitle="Movies and series saved for later" color={accentColor} surface={theme.surface} muted={theme.muted} />
+          <MenuRow icon={Bookmark} title="Watchlist Manager" subtitle="Manage your saved watchlist" color={accentColor} theme={theme} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <MenuRow icon={Download} title="Offline Downloads" subtitle="Manage saved episodes and films" color={accentColor} surface={theme.surface} muted={theme.muted} />
+          <MenuRow icon={Download} title="Offline Downloads" subtitle="Saved videos and download settings" color={accentColor} theme={theme} />
         </View>
 
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <Text style={[styles.sectionTitle, { color: theme.muted }]}>Account</Text>
-          <MenuRow icon={Settings} title="App Settings" subtitle="Theme, playback, language, and alerts" color={accentColor} surface={theme.surface} muted={theme.muted} onPress={() => navigation.navigate("Settings")} />
+        {/* Settings & Support Section */}
+        <View style={[styles.telegramSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Text style={[styles.sectionTitle, { color: theme.muted }]}>Settings & Support</Text>
+          <MenuRow icon={Settings} title="App Settings" subtitle="Preferences, languages, and country filters" color={accentColor} theme={theme} onPress={() => navigation.navigate("Settings")} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <MenuRow icon={HelpCircle} title="Help & Support" subtitle="Get help with playback or your account" color={accentColor} surface={theme.surface} muted={theme.muted} />
+          <MenuRow icon={HelpCircle} title="Help & Support" subtitle="Guides, FAQs, and contact" color={accentColor} theme={theme} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <MenuRow icon={LogOut} title="Log Out" subtitle="Return to the welcome screen" color="#FF6B6B" surface={theme.surface} muted={theme.muted} onPress={logout} danger />
+          <MenuRow icon={LogOut} title="Log Out" subtitle="Disconnect from FabPrime" color="#FF0000" theme={theme} onPress={logout} danger />
         </View>
       </ScrollView>
     </Container>
   )
 }
 
-function MenuRow({ icon: Icon, title, subtitle, color, surface, muted, onPress, danger }: MenuRowProps) {
+function MenuRow({ icon: Icon, title, subtitle, color, theme, onPress, danger }: any) {
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={0.72}>
-      <View style={styles.rowLeft}>
-        <View style={[styles.iconBox, { backgroundColor: surface }]}>
-          <Icon size={20} color={color} />
+    <TouchableOpacity style={styles.menuRow} onPress={onPress} activeOpacity={0.7}>
+      <View style={styles.menuRowLeft}>
+        <View style={[styles.iconBox, { backgroundColor: `${theme.surface}B3` }]}>
+          <Icon size={18} color={color} />
         </View>
-        <View style={styles.rowCopy}>
-          <Text style={[styles.rowText, danger && { color }]}>{title}</Text>
-          <Text style={[styles.rowSubtext, { color: muted }]} numberOfLines={1}>{subtitle}</Text>
+        <View style={styles.menuRowCopy}>
+          <Text style={[styles.menuRowTitle, danger && { color }]}>{title}</Text>
+          <Text style={[styles.menuRowSubtitle, { color: theme.muted }]}>{subtitle}</Text>
         </View>
       </View>
-      <ChevronRight size={18} color={muted} />
+      <ChevronRight size={16} color={theme.muted} />
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontFamily: "GeneralSans-Bold",
-  },
-  headerBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 55,
     paddingBottom: 110,
     gap: 14,
   },
-  heroCard: {
-    height: 218,
-    borderRadius: 8,
-    borderWidth: 1,
-    overflow: "hidden",
+  headerContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    height: 60,
   },
-  heroImage: {
-    resizeMode: "cover",
-    opacity: 0.55,
-  },
-  heroOverlay: {
+  headerContentWrapper: {
     flex: 1,
-    justifyContent: "space-between",
-    padding: 16,
-  },
-  heroTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 16,
   },
-  statusPill: {
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  headerTitle: {
+    fontSize: 22,
+    fontFamily: "GeneralSans-Bold",
   },
-  statusText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontFamily: "GeneralSans-Semibold",
-  },
-  sparkBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+  headerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: "center",
     alignItems: "center",
   },
-  heroUserRow: {
+  telegramHeader: {
+    paddingTop: 20,
+    paddingBottom: 24,
+    paddingHorizontal: 20,
+    borderRadius: 24,
+    marginHorizontal: 16,
+    gap: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+  },
+  profileMeta: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 14,
+    alignItems: "center",
+    gap: 18,
   },
   avatarWrapper: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 2,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 2,
-  },
-  avatar: {
-    width: "100%",
-    height: "100%",
+    width: 76,
+    height: 76,
     borderRadius: 38,
+    borderWidth: 2,
+    padding: 2,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -271,156 +259,142 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 38,
   },
-  userInfo: {
+  avatarPlaceholder: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 38,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  nameSection: {
     flex: 1,
+    justifyContent: "center",
   },
-  kicker: {
-    color: "rgba(255,255,255,0.72)",
-    fontSize: 12,
-    fontFamily: "GeneralSans-Semibold",
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  userName: {
+  displayName: {
+    fontSize: 22,
+    fontFamily: "GeneralSans-Bold",
+  },
+  proBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    gap: 3,
+  },
+  proText: {
     color: "#FFFFFF",
-    fontSize: 34,
-    fontFamily: "ClashGrotesk-Bold",
-    marginTop: 2,
+    fontSize: 8,
+    fontFamily: "GeneralSans-Bold",
   },
-  userEmail: {
-    color: "rgba(255,255,255,0.72)",
+  statusText: {
+    color: "#52B788",
     fontSize: 13,
     fontFamily: "GeneralSans-Medium",
     marginTop: 2,
   },
-  planCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 14,
-    borderRadius: 8,
+  telegramSection: {
+    borderRadius: 20,
     borderWidth: 1,
-    gap: 12,
-    overflow: "hidden",
-  },
-  planGlow: {
-    ...StyleSheet.absoluteFill,
-  },
-  planLeft: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  planIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  planCopy: {
-    flex: 1,
-  },
-  planTitle: {
-    fontSize: 15,
-    fontFamily: "GeneralSans-Bold",
-  },
-  planSubtitle: {
-    fontSize: 12,
-    fontFamily: "GeneralSans-Medium",
-    marginTop: 2,
-  },
-  planBadge: {
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-    borderRadius: 8,
-  },
-  planBadgeText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontFamily: "GeneralSans-Bold",
-  },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingVertical: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  statItem: {
-    alignItems: "center",
-    flex: 1,
-    gap: 5,
-  },
-  statIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: 20,
-    fontFamily: "GeneralSans-Bold",
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: "GeneralSans-Medium",
-  },
-  statDivider: {
-    width: 1,
-    height: 52,
-    position: "absolute",
-    right: 0,
-  },
-  section: {
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 16,
+    padding: 16,
+    marginHorizontal: 16,
     gap: 14,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontFamily: "GeneralSans-Semibold",
+    fontSize: 12,
+    fontFamily: "GeneralSans-Bold",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    marginBottom: 2,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-  },
-  rowLeft: {
+  infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    paddingVertical: 4,
+  },
+  infoIcon: {
+    marginRight: 16,
+  },
+  infoContent: {
     flex: 1,
   },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  rowCopy: {
-    flex: 1,
-  },
-  rowText: {
+  infoValue: {
     fontSize: 15,
     fontFamily: "GeneralSans-Semibold",
   },
-  rowSubtext: {
+  infoLabel: {
     fontSize: 12,
     fontFamily: "GeneralSans-Medium",
-    marginTop: 2,
+    marginTop: 1,
   },
   divider: {
-    height: 1,
+    height: 0.5,
     width: "100%",
   },
+  statsGrid: {
+    flexDirection: "row",
+    gap: 10,
+    marginHorizontal: 16,
+  },
+  statCellCard: {
+    flex: 1,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  statGridNumber: {
+    fontSize: 16,
+    fontFamily: "GeneralSans-Bold",
+  },
+  statGridLabel: {
+    fontSize: 10,
+    fontFamily: "GeneralSans-Medium",
+    marginTop: 1,
+  },
+  menuRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  menuRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    flex: 1,
+  },
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuRowCopy: {
+    flex: 1,
+  },
+  menuRowTitle: {
+    fontSize: 15,
+    fontFamily: "GeneralSans-Semibold",
+  },
+  menuRowSubtitle: {
+    fontSize: 12,
+    fontFamily: "GeneralSans-Medium",
+    marginTop: 1,
+  }
 })

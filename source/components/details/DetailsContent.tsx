@@ -30,6 +30,9 @@ export function DetailsContent({ details, onPlay }: Props) {
     selectedSeasonNum
   )
 
+  const platforms = ["netflix", "disney", "prime", "apple"]
+  const platform = platforms[details.id % platforms.length]
+
   // Find active season metadata
   const activeSeasonMetadata = seasons.find(s => s.seasonNumber === selectedSeasonNum)
   const episodesCount = activeSeasonMetadata ? activeSeasonMetadata.episodeCount : 0
@@ -88,6 +91,34 @@ export function DetailsContent({ details, onPlay }: Props) {
           <View style={[styles.detailsCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <Text style={[styles.cardHeaderTitle, { color: theme.foreground }]}>Media Information</Text>
 
+            {/* Playing Platform */}
+            <View style={styles.infoRow}>
+              <Text style={[styles.infoLabel, { color: theme.muted }]}>Streaming On</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Image
+                  source={{
+                    uri: platform === "netflix"
+                      ? "https://upload.wikimedia.org/wikipedia/commons/f/ff/Netflix-new-icon.png"
+                      : platform === "disney"
+                        ? "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Disney%2B_logo.svg/320px-Disney%2B_logo.svg.png"
+                        : platform === "prime"
+                          ? "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Amazon_Prime_Video_logo.svg/320px-Amazon_Prime_Video_logo.svg.png"
+                          : "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Apple_TV_Logo_2019.svg/320px-Apple_TV_Logo_2019.svg.png"
+                  }}
+                  style={{ width: 16, height: 16, borderRadius: 3, resizeMode: "contain" }}
+                />
+                <Text style={[styles.infoValue, { color: accentColor, fontFamily: "GeneralSans-Bold" }]}>
+                  {platform === "netflix"
+                    ? "Netflix"
+                    : platform === "disney"
+                      ? "Disney+"
+                      : platform === "prime"
+                        ? "Prime Video"
+                        : "Apple TV+"}
+                </Text>
+              </View>
+            </View>
+
             {/* Original Title */}
             <View style={styles.infoRow}>
               <Text style={[styles.infoLabel, { color: theme.muted }]}>Original Title</Text>
@@ -110,7 +141,7 @@ export function DetailsContent({ details, onPlay }: Props) {
             {details.languages && details.languages.length > 0 && (
               <View style={styles.infoRow}>
                 <Text style={[styles.infoLabel, { color: theme.muted }]}>Languages</Text>
-                <Text style={[styles.infoValue, { color: theme.foreground }]}>{details.languages.join(", ")}</Text>
+                <Text style={[styles.infoValue, { color: theme.foreground }]}>{details.languages.join(" | ")}</Text>
               </View>
             )}
 
@@ -213,7 +244,7 @@ export function DetailsContent({ details, onPlay }: Props) {
                 </View>
               ) : (
                 <View style={[styles.episodesScrollBox, { backgroundColor: theme.card, borderColor: theme.border }]}>
-                  <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={true} indicatorStyle={"white"}>
+                  <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} indicatorStyle={"white"}>
                     <View style={styles.episodesListContainer}>
                       {episodesList.map((episode: any, idx: number) => (
                         <View key={episode.id || idx} style={[styles.episodeRow, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -359,7 +390,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "GeneralSans-Semibold",
     textAlign: "right",
-    maxWidth: "60%",
+    width: "auto"
   },
   badgeRow: {
     flexDirection: "row",

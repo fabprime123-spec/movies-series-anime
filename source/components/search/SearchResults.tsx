@@ -11,19 +11,23 @@ import { normalizeMedia } from "../../utils/normalize"
 import { SearchCard } from "../cards/SearchCard"
 import { Tv } from "lucide-react-native"
 import { useTheme } from "../../context/ThemeContext"
+import { useSettingsStore } from "../../store/settings.store"
 
 interface Props {
   data: any[]
   isLoading: boolean
   onScroll?: any
+  contentContainerStyle?: any
 }
 
 export function SearchResults({
   data,
   isLoading,
-  onScroll
+  onScroll,
+  contentContainerStyle
 }: Props) {
   const { theme } = useTheme()
+  const { excludedCountries, filterLanguage, selectedPlatforms, filterYear } = useSettingsStore()
 
   if (isLoading) {
     return (
@@ -37,6 +41,37 @@ export function SearchResults({
     .filter(item => item.media_type !== "person")
     .sort((a, b) => b.popularity - a.popularity)
     .map(normalizeMedia)
+    .filter((item: any) => {
+      // 1. Excluded countries check
+      if (item.countries && item.countries.some((code: string) => excludedCountries.includes(code))) {
+        return false
+      }
+
+      // 2. Original language check
+      if (filterLanguage !== "All" && item.original_language !== filterLanguage) {
+        return false
+      }
+
+      // 3. Platform check
+      if (item.platform && !selectedPlatforms.includes(item.platform)) {
+        return false
+      }
+
+      // 4. Release year check
+      if (filterYear !== "All") {
+        if (filterYear === "2020+") {
+          const y = parseInt(item.release_year)
+          if (isNaN(y) || y < 2020) return false
+        } else if (filterYear === "2010+") {
+          const y = parseInt(item.release_year)
+          if (isNaN(y) || y < 2010) return false
+        } else {
+          if (item.release_year !== filterYear) return false
+        }
+      }
+
+      return true
+    })
 
   if (results.length === 0) {
     return (
@@ -53,7 +88,7 @@ export function SearchResults({
       keyExtractor={(item) => `${item.type}-${item.id}`}
       numColumns={3}
       columnWrapperStyle={styles.row}
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[styles.list, contentContainerStyle]}
       renderItem={({ item }) => (
         <SearchCard item={item} />
       )}
@@ -74,6 +109,7 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: "flex-start",
     gap: 8,
+    marginHorizontal: 8
   },
   center: {
     flex: 1,
@@ -81,6 +117,6 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   icon: {
-    margin: 10,
+    margin: 0,
   }
 })

@@ -1,11 +1,12 @@
-import React from "react"
-import { Image, StyleSheet, View, TouchableOpacity, ActivityIndicator } from "react-native"
+import React, { useRef } from "react"
+import { Image, StyleSheet, View, TouchableOpacity, ActivityIndicator, PanResponder } from "react-native"
 import { DetailsItem } from "../../types/details.type"
 import { Text } from "../ui/Text"
 import { LinearGradient } from "expo-linear-gradient"
 import { useTheme } from "../../context/ThemeContext"
 import { useMediaStore } from "../../store/media.store"
 import { Play, Plus, Check, Heart, Download, CheckCircle } from "lucide-react-native"
+import { useNavigation } from "@react-navigation/native"
 
 interface Props {
   data: DetailsItem
@@ -14,6 +15,22 @@ interface Props {
 
 export function Hero({ data, onPlay }: Props) {
   const { theme, accentColor } = useTheme()
+  const navigation = useNavigation()
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Trigger responder only for downward swipes of sufficient distance/speed
+        return gestureState.dy > 30 && Math.abs(gestureState.dx) < 20
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 50 && gestureState.vy > 0.2) {
+          navigation.goBack()
+        }
+      }
+    })
+  ).current
 
   const {
     watchlist,
@@ -76,15 +93,17 @@ export function Hero({ data, onPlay }: Props) {
 
   return (
     <View>
-      <Image
-        source={{ uri: `https://image.tmdb.org/t/p/original${data.backdrop}` }}
-        style={styles.backdrop}
-      />
-      <LinearGradient colors={[theme.background, "#ffffff00", "#ffffff00", theme.background]} style={styles.gradient} />
+      <View {...panResponder.panHandlers} style={{ position: "relative" }}>
+        <Image
+          source={{ uri: `https://image.tmdb.org/t/p/original${data.backdrop}` }}
+          style={styles.backdrop}
+        />
+        <LinearGradient colors={["#ffffff00", "#ffffff00", theme.background]} style={styles.gradient} />
+      </View>
 
       <View style={styles.overlay}>
         <Image
-          source={{ uri: `https://image.tmdb.org/t/p/w500${data.poster}` }}
+          source={{ uri: `https://image.tmdb.org/t/p/original${data.poster}` }}
           style={styles.poster}
         />
         <View style={styles.info}>
@@ -162,12 +181,13 @@ export function Hero({ data, onPlay }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     width: "100%",
-    height: 240,
-    resizeMode: "cover",
+    height: "auto",
+    aspectRatio: 16 / 9,
+    resizeMode: "contain",
   },
   gradient: {
     position: "absolute",
-    height: 240,
+    aspectRatio: 16 / 9,
     width: "100%",
   },
   overlay: {
