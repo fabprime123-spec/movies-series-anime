@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, ViewStyle, DimensionValue } from 'react-native'
-import LinearGradient from 'react-native-linear-gradient'
+import { NativeGradient } from '../native/NativeGradient'
 import { useTheme } from '../../theme/ThemeContext'
 
 interface SkeletonProps {
@@ -50,11 +50,12 @@ export function Skeleton({ width, height, style, borderRadius = 8 }: SkeletonPro
         style,
       ]}
     >
-      <LinearGradient
-        colors={['transparent', 'rgba(255,255,255,0.1)', 'transparent']}
+      <NativeGradient
+        colors={["transparent", "rgba(255,255,255,0.1)", "transparent"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={StyleSheet.absoluteFill}
+        pointerEvents="none"
       />
     </Animated.View>
   )

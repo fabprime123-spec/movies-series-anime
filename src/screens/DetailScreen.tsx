@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { View, StyleSheet, ScrollView, ImageBackground, TouchableOpacity, Dimensions, FlatList, Image } from 'react-native'
 import { useRoute, useNavigation } from '@react-navigation/native'
-import LinearGradient from 'react-native-linear-gradient'
-import { ArrowLeft, Check, Plus, Star, Link as LinkIcon, ChevronLeft, Heart, Bookmark } from 'lucide-react-native'
+import { NativeGradient } from '../components/native/NativeGradient'
+import { Star, ChevronLeft, Heart, Bookmark, Download } from 'lucide-react-native'
 import { Text } from '../components/ui/Text'
+import { AlertModal } from '../components/ui/AlertModal'
 import { getMediaDetails } from '../api/tmdb'
+import { downloadMediaPackage } from '../utils/zipDownloader'
 import { useFavorites } from '../store/FavoritesContext'
 import { useWatchlist } from '../store/WatchlistContext'
 import { useHistory } from '../store/HistoryContext'
@@ -12,18 +14,17 @@ import { useTheme } from '../theme/ThemeContext'
 import { Skeleton } from '../components/ui/Skeleton'
 import { CastCard } from '../components/cards/CastCard'
 import { VideoCard } from '../components/cards/VideoCard'
-import { ImageGallery } from '../components/ImageGallery'
-import { MediaCard } from '../components/cards/MediaCard'
+import { ImageGallery } from '../components/gallery/ImageGallery'
+import { NativeMediaList } from '../components/native/NativeMediaList'
 import { Container } from '../components/ui/Container'
 import Wave from '../animations/Wave'
 
-const { height } = Dimensions.get('window')
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original'
 
 export function DetailScreen() {
   const route = useRoute<any>()
   const navigation = useNavigation<any>()
-  const { theme } = useTheme()
+  const { theme, accentColor } = useTheme()
   const { id, type } = route.params
 
   const { isFavorite, addFavorite, removeFavorite } = useFavorites()
@@ -32,6 +33,47 @@ export function DetailScreen() {
 
   const [details, setDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+
+  const [isDownloadingZip, setIsDownloadingZip] = useState(false)
+  const [downloadProgressText, setDownloadProgressText] = useState('')
+  const [downloadStatus, setDownloadStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [alertConfig, setAlertConfig] = useState<{ visible: boolean, title: string, message: string, type: 'success' | 'error' | 'info' }>({
+    visible: false, title: '', message: '', type: 'info'
+  })
+
+  const handleDownloadZip = async () => {
+    try {
+      setIsDownloadingZip(true)
+      setDownloadStatus('idle')
+      const path = await downloadMediaPackage(details, (text, current, total) => {
+        if (total > 1) {
+          setDownloadProgressText(`${text} (${current}/${total})`)
+        } else {
+          setDownloadProgressText(text)
+        }
+      })
+      setDownloadStatus('success')
+      setAlertConfig({
+        visible: true,
+        title: 'Success!',
+        message: `Media package downloaded successfully!\nSaved to:\n${path}`,
+        type: 'success'
+      })
+      setTimeout(() => setDownloadStatus('idle'), 3000)
+    } catch (e: any) {
+      setDownloadStatus('error')
+      setAlertConfig({
+        visible: true,
+        title: 'Download Failed',
+        message: e.message || 'An error occurred while building the ZIP.',
+        type: 'error'
+      })
+      setTimeout(() => setDownloadStatus('idle'), 3000)
+    } finally {
+      setIsDownloadingZip(false)
+      setDownloadProgressText('')
+    }
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -96,6 +138,12 @@ export function DetailScreen() {
   const composers = crew.filter((c: any) => c.job === 'Original Music Composer' || c.job === 'Music')
   const creators = details.created_by || []
 
+  const handleItemPress = (event: any) => {
+    const { id: mediaId } = event.nativeEvent;
+    const media = recommendations.find((m: any) => m.id === mediaId) || similar.find((m: any) => m.id === mediaId);
+    navigation.push('Details', { id: mediaId, type: media?.media_type || event.nativeEvent.mediaType || type });
+  }
+
   return (
     <Container useSafeArea={true}>
       <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
@@ -104,11 +152,17 @@ export function DetailScreen() {
         <View style={styles.header}>
           {imageUrl ? (
             <ImageBackground source={{ uri: imageUrl as string }} style={styles.image}>
-              <LinearGradient colors={['rgba(0,0,0,0.5)', 'transparent', theme.background]} style={styles.gradient}>
+              <NativeGradient
+                colors={["rgba(0,0,0,0.5)", "transparent", theme.background]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={StyleSheet.absoluteFill}
+              />
+              <View style={styles.gradient}>
                 <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                   <ChevronLeft color={theme.foreground} size={28} />
                 </TouchableOpacity>
-              </LinearGradient>
+              </View>
               <Image
                 source={{ uri: posterImage as string }}
                 style={{
@@ -183,6 +237,33 @@ export function DetailScreen() {
             </TouchableOpacity>
           </View>
 
+          <TouchableOpacity
+            style={[
+              styles.actionButton,
+              {
+                backgroundColor: downloadStatus === 'success' ? '#10b981' : downloadStatus === 'error' ? '#ef4444' : theme.card,
+                marginBottom: 24,
+                paddingVertical: 18
+              }
+            ]}
+            onPress={handleDownloadZip}
+            disabled={isDownloadingZip}
+          >
+            {isDownloadingZip ? (
+              <>
+                <Text weight="bold" color={downloadStatus !== 'idle' ? '#fff' : theme.foreground}>{downloadProgressText}</Text>
+                <Wave size={20} color={accentColor} />
+              </>
+            ) : (
+              <>
+                <Download color={downloadStatus !== 'idle' ? '#fff' : theme.foreground} size={20} />
+                <Text weight="bold" color={downloadStatus !== 'idle' ? '#fff' : theme.foreground}>
+                  {downloadStatus === 'success' ? 'Downloaded!' : downloadStatus === 'error' ? 'Failed' : 'Download Media Package (.zip)'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+
           {/* OVERVIEW */}
           <Text style={styles.sectionHeader} weight="bold" size={20}>Overview</Text>
           <Text style={styles.overview} color={theme.muted}>{details.overview || 'No overview available.'}</Text>
@@ -204,14 +285,36 @@ export function DetailScreen() {
           </View>
         </View>
 
-        <View style={styles.infoRow}>
-          <Text color={theme.muted} style={styles.infoLabel}>Production:</Text>
-          <Text style={styles.infoValue}>{details.production_companies?.map((c: any) => c.name).join(', ') || 'N/A'}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text color={theme.muted} style={styles.infoLabel}>Countries:</Text>
-          <Text style={styles.infoValue}>{details.production_countries?.map((c: any) => c.name).join(', ') || 'N/A'}</Text>
-        </View>
+        {/* Production company */}
+        {details.production_companies?.length > 0 && (
+          <View style={styles.infoSection}>
+            <Text weight="bold" size={16} style={{ marginBottom: 12 }}>Production Companies</Text>
+            <View style={styles.companyGrid}>
+              {details.production_companies.map((c: any) => (
+                <View key={c.id} style={[styles.companyCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  {c.logo_path ? (
+                    <Image source={{ uri: `https://image.tmdb.org/t/p/w200${c.logo_path}` }} style={styles.companyLogo} resizeMode="contain" />
+                  ) : null}
+                  <Text size={12} weight="medium" style={{ marginLeft: c.logo_path ? 8 : 0 }}>{c.name}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {details.production_countries?.length > 0 && (
+          <View style={styles.infoSection}>
+            <Text weight="bold" size={16} style={{ marginBottom: 12 }}>Production Countries</Text>
+            <View style={styles.countryGrid}>
+              {details.production_countries.map((c: any) => (
+                <View key={c.iso_3166_1} style={[styles.countryCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+                  <Image source={{ uri: `https://flagcdn.com/w80/${c.iso_3166_1.toLowerCase()}.png` }} style={styles.countryFlag} />
+                  <Text size={12} weight="medium">{c.name}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* CAST */}
         {cast.length > 0 && (
@@ -254,7 +357,11 @@ export function DetailScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.listContent}
               renderItem={({ item }) => (
-                <View style={styles.seasonCard}>
+                <TouchableOpacity
+                  style={styles.seasonCard}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('Season', { tvId: details.id, seasonNumber: item.season_number, showName: title })}
+                >
                   {item.poster_path ? (
                     <ImageBackground source={{ uri: `${IMAGE_BASE_URL}${item.poster_path}` }} style={styles.seasonImage} imageStyle={{ borderRadius: 8 }}>
                       <View style={styles.seasonOverlay}>
@@ -268,7 +375,7 @@ export function DetailScreen() {
                       <Text size={12}>{item.episode_count} Eps</Text>
                     </View>
                   )}
-                </View>
+                </TouchableOpacity>
               )}
             />
           </View>
@@ -276,7 +383,7 @@ export function DetailScreen() {
 
         {/* TRAILERS & VIDEOS */}
         {videos.length > 0 && (
-          <View style={styles.section}>
+          <View style={[styles.section]}>
             <Text weight="bold" size={20} style={styles.sectionTitle}>Trailers & Videos</Text>
             <FlatList
               data={videos}
@@ -296,13 +403,12 @@ export function DetailScreen() {
         {recommendations.length > 0 && (
           <View style={styles.section}>
             <Text weight="bold" size={20} style={styles.sectionTitle}>Recommended</Text>
-            <FlatList
-              data={recommendations}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-              renderItem={({ item }) => <MediaCard media={item} />}
+            <NativeMediaList
+              data={recommendations.map((m: any) => ({ ...m, mediaType: m.media_type || type }))}
+              isGrid={false}
+              isHorizontalCard={false}
+              onItemPress={handleItemPress}
+              style={{ width: '100%', height: 168 }}
             />
           </View>
         )}
@@ -311,22 +417,30 @@ export function DetailScreen() {
         {similar.length > 0 && (
           <View style={[styles.section, { marginBottom: 60 }]}>
             <Text weight="bold" size={20} style={styles.sectionTitle}>Similar</Text>
-            <FlatList
-              data={similar}
-              keyExtractor={(item) => item.id.toString()}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-              renderItem={({ item }) => <MediaCard media={item} />}
+            <NativeMediaList
+              data={similar.map((m: any) => ({ ...m, mediaType: m.media_type || type }))}
+              isGrid={false}
+              isHorizontalCard={false}
+              onItemPress={handleItemPress}
+              style={{ width: '100%', height: 168 }}
             />
           </View>
         )}
 
       </ScrollView>
-      <LinearGradient
-        colors={[theme.background, "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", theme.background]}
+      <NativeGradient
+        colors={[theme.background, "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", theme.background]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
-        pointerEvents='none'
+        pointerEvents="none"
+      />
+      <AlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
       />
     </Container>
   )
@@ -338,8 +452,8 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%', aspectRatio: 16 / 13 },
   gradient: { flex: 1, justifyContent: 'space-between' },
   backButton: { padding: 20, marginTop: 10 },
-  content: { padding: 16, marginTop: -40 },
-  padding: { padding: 20 },
+  content: { padding: 10, marginTop: -40 },
+  padding: { padding: 0 },
   title: {
     marginBottom: 10, maxWidth: "74%",
     minHeight: 75
@@ -380,14 +494,24 @@ const styles = StyleSheet.create({
   },
   sectionHeader: { marginBottom: 12 },
   overview: { lineHeight: 24, marginBottom: 24 },
-  statsGrid: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth, marginHorizontal: 20, marginBottom: 16 },
+  statsGrid: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 16, borderTopWidth: StyleSheet.hairlineWidth, marginHorizontal: 0, marginBottom: 16 },
   statBox: { alignItems: 'center' },
-  infoRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 8 },
+  infoRow: { flexDirection: 'row', paddingHorizontal: 0, marginBottom: 8 },
   infoLabel: { width: 100 },
   infoValue: { flex: 1, fontWeight: '500' },
-  section: { marginTop: 32 },
+  infoSection: { paddingHorizontal: 20, marginBottom: 24 },
+  companyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  companyCard: { flexDirection: 'row', padding: 8, paddingHorizontal: 16, borderRadius: 50, borderWidth: 1, alignItems: 'center' },
+  companyLogo: { width: 40, height: 20 },
+  countryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  countryCard: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 16, borderRadius: 50, borderWidth: 1, gap: 8 },
+  countryFlag: { width: 24, height: 16, borderRadius: 2 },
+  section: {
+    marginTop: 32,
+    paddingHorizontal: 0
+  },
   sectionTitle: { marginLeft: 20, marginBottom: 16 },
-  listContent: { paddingHorizontal: 20, gap: 12 },
+  listContent: { paddingHorizontal: 16, gap: 12 },
   seasonCard: { width: 120, height: 180, marginRight: 12 },
   seasonImage: { width: '100%', height: '100%' },
   seasonOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0)', borderRadius: 8, justifyContent: 'flex-end', padding: 8 },

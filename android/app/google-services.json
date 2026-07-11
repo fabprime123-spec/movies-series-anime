@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "106849519216",
+    "project_id": "movies-series-3000",
+    "storage_bucket": "movies-series-3000.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:106849519216:android:95faa9047a561ea2fbd6b5",
+        "android_client_info": {
+          "package_name": "com.moviesseries"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "106849519216-kab32t774ef0s8a06b6kbqfuklldqa8c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAau09e5o1KTn3MV1j7rgxJP6OG1PcHhAM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "106849519216-kab32t774ef0s8a06b6kbqfuklldqa8c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

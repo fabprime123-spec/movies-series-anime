@@ -2,8 +2,8 @@ import React, { useMemo, useCallback } from 'react'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { Container } from '../components/ui/Container'
 import { Text } from '../components/ui/Text'
-import { MediaSlider } from '../components/MediaSlider'
-import { TabbedMediaSlider } from '../components/TabbedMediaSlider'
+import { MediaSlider } from '../components/sliders/MediaSlider'
+import { TabbedMediaSlider } from '../components/sliders/TabbedMediaSlider'
 import { HeroBanner } from '../components/HeroBanner'
 import { useTheme } from '../theme/ThemeContext'
 import {
@@ -16,7 +16,8 @@ import {
   // Genres
   getAnime, getAnimation, getDocumentaries, getMusic, getFantasy, getSciFi
 } from '../api/tmdb'
-import LinearGradient from 'react-native-linear-gradient'
+import { NativeGradient } from '../components/native/NativeGradient'
+import { Trophy, Play, TrendingUp, Star, Calendar, Flame, CirclePlay } from 'lucide-react-native'
 
 const SectionHeader = React.memo(({ title }: { title: string }) => {
   const { theme } = useTheme()
@@ -30,21 +31,21 @@ const SectionHeader = React.memo(({ title }: { title: string }) => {
 })
 
 export function HomeScreen() {
-  const { theme } = useTheme()
+  const { theme, mode } = useTheme()
 
   const movieTabs = useMemo(() => [
-    { label: "Now Playing", fetchFn: getNowPlayingMovies },
-    { label: "Popular", fetchFn: getPopularMovies },
-    { label: "Top Rated", fetchFn: getTopRatedMovies },
-    { label: "Upcoming", fetchFn: getUpcomingMovies },
-  ], [])
+    { label: "Now Playing", fetchFn: getNowPlayingMovies, Icon: <CirclePlay size={18} color={theme.foreground} /> },
+    { label: "Popular", fetchFn: getPopularMovies, Icon: <Flame size={16} color={theme.foreground} /> },
+    { label: "Top Rated", fetchFn: getTopRatedMovies, Icon: <Trophy size={16} color={theme.foreground} /> },
+    { label: "Upcoming", fetchFn: getUpcomingMovies, Icon: <Calendar size={16} color={theme.foreground} /> },
+  ], [mode, theme.foreground])
 
   const seriesTabs = useMemo(() => [
-    { label: "Airing Today", fetchFn: getAiringTodaySeries },
-    { label: "Popular", fetchFn: getPopularSeries },
-    { label: "Top Rated", fetchFn: getTopRatedSeries },
-    { label: "On The Air", fetchFn: getOnTheAirSeries },
-  ], [])
+    { label: "Airing Today", fetchFn: getAiringTodaySeries, Icon: <CirclePlay size={18} color={theme.foreground} /> },
+    { label: "Popular", fetchFn: getPopularSeries, Icon: <Flame size={16} color={theme.foreground} /> },
+    { label: "Top Rated", fetchFn: getTopRatedSeries, Icon: <Trophy size={16} color={theme.foreground} /> },
+    { label: "On The Air", fetchFn: getOnTheAirSeries, Icon: <Calendar size={16} color={theme.foreground} /> },
+  ], [mode, theme.foreground])
 
   const sections = useMemo(() => [
     { type: 'hero', key: 'hero' },
@@ -84,36 +85,38 @@ export function HomeScreen() {
   const keyExtractor = useCallback((item: any) => item.key, []);
 
   return (
-    <Container useSafeArea={true}>
+    <Container>
       <FlatList
         data={sections}
-        renderItem={renderItem}
         keyExtractor={keyExtractor}
+        renderItem={renderItem}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        initialNumToRender={4}
-        maxToRenderPerBatch={4}
-        windowSize={5}
       />
-      <LinearGradient colors={[theme.background, "transparent"]} style={styles.gradient} pointerEvents="none" />
+      <NativeGradient
+        colors={[theme.background, "transparent"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradient}
+        pointerEvents="none"
+      />
     </Container>
   )
 }
 
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: 80, // Space for the TabBar
+    paddingBottom: 110, // Space for the TabBar
+    gap: 24
   },
   sectionHeaderContainer: {
-    marginLeft: 20,
-    marginRight: 20,
-    marginBottom: 16,
-    marginTop: 16,
+    paddingHorizontal: 10,
     paddingBottom: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   sectionHeader: {
     // Styling applied dynamically
+    paddingHorizontal: 8
   },
   gradient: {
     position: "absolute",

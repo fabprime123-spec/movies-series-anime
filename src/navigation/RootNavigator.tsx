@@ -1,10 +1,13 @@
-import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { TabNavigator } from './TabNavigator';
-import { DetailScreen } from '../screens/DetailScreen';
-import { SettingsScreen } from '../screens/SettingsScreen';
+import React from 'react'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { TabNavigator } from './TabNavigator'
+import { DetailScreen } from '../screens/DetailScreen'
+import { SettingsScreen } from '../screens/SettingsScreen'
+import { SeasonScreen } from '../screens/SeasonScreen'
+import { VerticalImageScreen } from '../screens/VerticalImageScreen'
+import { ImageViewerScreen } from '../screens/ImageViewerScreen'
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator()
 
 export function RootNavigator() {
   return (
@@ -24,6 +27,21 @@ export function RootNavigator() {
         component={SettingsScreen}
         options={{ animation: "slide_from_right" }}
       />
+      <Stack.Screen
+        name="Season"
+        component={SeasonScreen}
+        options={{ animation: "slide_from_right" }}
+      />
+      <Stack.Screen
+        name="VerticalImage"
+        component={VerticalImageScreen}
+        options={{ animation: "slide_from_bottom" }}
+      />
+      <Stack.Screen
+        name="ImageViewer"
+        component={ImageViewerScreen}
+        options={{ animation: "fade" }}
+      />
     </Stack.Navigator>
-  );
+  )
 }

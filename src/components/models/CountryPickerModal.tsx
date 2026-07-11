@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { View, Modal, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native'
 import { X, Search } from 'lucide-react-native'
-import { Text } from './ui/Text'
-import { COUNTRIES, Country } from '../constants/countries'
-import { useTheme } from '../theme/ThemeContext'
-import LinearGradient from 'react-native-linear-gradient'
+import { Text } from '../ui/Text'
+import { COUNTRIES, Country } from '../../constants/countries'
+import { useTheme } from '../../theme/ThemeContext'
+import { NativeGradient } from '../native/NativeGradient'
 
 interface CountryPickerModalProps {
   visible: boolean
@@ -73,10 +73,12 @@ export function CountryPickerModal({ visible, onClose, onSelect, selectedCode }:
         />
 
       </View>
-      <LinearGradient
-        colors={["transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", theme.background]}
-        pointerEvents='none'
+      <NativeGradient
+        colors={["transparent", "transparent", theme.background]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
+        pointerEvents="none"
       />
     </Modal>
   )

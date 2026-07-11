@@ -1,24 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { View, StyleSheet, TextInput, FlatList, TouchableOpacity, Keyboard, Dimensions } from 'react-native'
+import { View, StyleSheet, TextInput, FlatList, TouchableOpacity, Keyboard, Dimensions, ScrollView } from 'react-native'
 import { Search as SearchIcon, X, Clock } from 'lucide-react-native'
 import { useNavigation } from '@react-navigation/native'
 import { Container } from '../components/ui/Container'
 import { Text } from '../components/ui/Text'
 import { MediaCard } from '../components/cards/MediaCard'
-import { searchMedia } from '../api/tmdb'
+import { searchMedia, getTrending } from '../api/tmdb'
 import { useTheme } from '../theme/ThemeContext'
 import { useSearchHistory } from '../store/SearchHistoryContext'
 import { SearchCard } from '../components/cards/SearchCard'
-import LinearGradient from 'react-native-linear-gradient'
+import { NativeGradient } from '../components/native/NativeGradient'
+import { Top10Slider } from '../components/sliders/Top10Slider'
 
 const { width } = Dimensions.get("window")
 export function SearchScreen() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
+  const [trending, setTrending] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const navigation = useNavigation<any>()
   const { theme } = useTheme()
   const { recentSearches, addSearch, clearSearches } = useSearchHistory()
+
+  useEffect(() => {
+    getTrending().then(res => setTrending(res.results)).catch(console.error)
+  }, [])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -58,7 +64,7 @@ export function SearchScreen() {
   }
 
   const keyExtractor = useCallback((item: any) => item.id.toString(), [])
-  
+
   const renderItem = useCallback(({ item }: any) => (
     <SearchCard
       media={item}
@@ -81,53 +87,60 @@ export function SearchScreen() {
           onChangeText={setQuery}
           onSubmitEditing={handleSearchSubmit}
           returnKeyType="search"
-          autoFocus
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={() => setQuery('')}>
             <X color={theme.muted} size={20} />
           </TouchableOpacity>
         )}
-        <LinearGradient
+        <NativeGradient
           colors={[theme.background, theme.background, "transparent"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
           style={styles.gradient}
-          pointerEvents='none'
+          pointerEvents="none"
         />
       </View>
 
-      {!query.trim() && recentSearches.length > 0 ? (
-        <View style={styles.recentSection}>
-          <View style={styles.recentHeader}>
-            <Text weight="bold" size={16}>Recent Searches</Text>
-            <TouchableOpacity onPress={clearSearches}>
-              <Text color={theme.muted} size={12}>Clear</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.recentPills}>
-            {recentSearches.map((keyword, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[styles.pill, { backgroundColor: theme.card, borderColor: theme.border }]}
-                onPress={() => handleRecentSearchTap(keyword)}
-              >
-                <Clock color={theme.muted} size={14} />
-                <Text size={12}>{keyword}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+      {!query.trim() ? (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100, paddingTop: 30 }}>
+          {recentSearches.length > 0 && (
+            <View style={styles.recentSection}>
+              <View style={styles.recentHeader}>
+                <Text weight="bold" size={16}>Recent Searches</Text>
+                <TouchableOpacity onPress={clearSearches}>
+                  <Text color={theme.muted} size={12}>Clear</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.recentPills}>
+                {recentSearches.map((keyword, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.pill, { backgroundColor: theme.card, borderColor: theme.border }]}
+                    onPress={() => handleRecentSearchTap(keyword)}
+                  >
+                    <Clock color={theme.muted} size={14} />
+                    <Text size={12}>{keyword}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {trending.length > 0 && (
+            <Top10Slider data={trending} title="Top Searches Today" />
+          )}
+        </ScrollView>
       ) : (
         <FlatList
           data={results}
           keyExtractor={keyExtractor}
+          renderItem={renderItem}
           numColumns={3}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
-          renderItem={renderItem}
-          initialNumToRender={9}
-          maxToRenderPerBatch={6}
-          windowSize={5}
+          keyboardShouldPersistTaps="handled"
         />
       )}
     </Container>
@@ -162,7 +175,7 @@ const styles = StyleSheet.create({
   grid: {
     paddingTop: 24,
     paddingHorizontal: 10,
-    paddingBottom: 90,
+    paddingBottom: 105,
   },
   row: {
     justifyContent: "flex-start",

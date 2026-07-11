@@ -163,3 +163,8 @@ export const getMediaDetails = async (id: number, type: 'movie' | 'tv') => {
   const response = await apiClient.get(`/${type}/${id}?append_to_response=credits,similar,recommendations,videos,images,keywords&include_image_language=en,null`)
   return response.data
 }
+
+export const getSeasonDetails = async (tvId: number, seasonNumber: number) => {
+  const response = await apiClient.get(`/tv/${tvId}/season/${seasonNumber}?append_to_response=credits,videos,images&include_image_language=en,null`)
+  return response.data
+}

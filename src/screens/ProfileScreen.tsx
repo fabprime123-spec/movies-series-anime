@@ -8,8 +8,8 @@ import { useHistory } from "../store/HistoryContext"
 import { useWatchlist } from "../store/WatchlistContext"
 import { useFavorites } from "../store/FavoritesContext"
 import { useNavigation } from "@react-navigation/native"
-import { User, Settings, Bookmark, Download, HelpCircle, LogOut, ChevronRight, Sparkles, Mail, UserCheck, Award, History, Heart, GitBranch, } from "lucide-react-native"
-import LinearGradient from 'react-native-linear-gradient'
+import { User, Settings, Bookmark, Download, HelpCircle, LogOut, ChevronRight, Sparkles, Mail, UserCheck, Award, History, Heart, GitBranch, Bolt, } from "lucide-react-native"
+import { NativeGradient } from '../components/native/NativeGradient'
 
 export function ProfileScreen() {
   const { theme, accentColor } = useTheme()
@@ -26,12 +26,14 @@ export function ProfileScreen() {
 
   return (
     <Container style={styles.container} useSafeArea={true}>
-
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.headerContainer}>
-          <LinearGradient
+          <NativeGradient
             colors={[theme.background, `${theme.background}E6`, "transparent"]}
-            style={[StyleSheet.absoluteFill]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
           />
           <View style={styles.headerContentWrapper}>
             <Text style={[styles.headerTitle, { color: theme.foreground }]}>My Profile</Text>
@@ -40,17 +42,12 @@ export function ProfileScreen() {
               onPress={() => navigation.navigate("Settings")}
               activeOpacity={0.7}
             >
-              <Settings size={18} color={theme.foreground} />
+              <Bolt size={24} color={theme.foreground} />
             </TouchableOpacity>
           </View>
         </View>
-        {/* Glowing Profile Header section */}
-        <LinearGradient
-          colors={[theme.card, `${accentColor}22`, theme.card]}
-          style={styles.telegramHeader}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
+        {/* Profile Header section */}
+        <View style={[styles.telegramHeader, { backgroundColor: theme.surface, borderColor: theme.border, boxShadow: `0px 0px 30px ${accentColor}20` }]}>
           {/* User Details */}
           <View style={styles.profileMeta}>
             <View style={[styles.avatarWrapper, { borderColor: accentColor }]}>
@@ -75,7 +72,7 @@ export function ProfileScreen() {
               <Text style={styles.statusText}>online</Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         {/* Telegram Info Section */}
         <View style={[styles.telegramSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -162,11 +159,12 @@ export function ProfileScreen() {
       </ScrollView>
       {/* Sticky Glassmorphic Header */}
 
-      <LinearGradient
+      <NativeGradient
         colors={[theme.background, "transparent"]}
-        style={[StyleSheet.absoluteFill, {
-          maxHeight: 30
-        }]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[StyleSheet.absoluteFill, { maxHeight: 30 }]}
+        pointerEvents="none"
       />
     </Container>
   )
@@ -195,6 +193,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     height: 60,
+    paddingHorizontal: 10
   },
   headerContentWrapper: {
     flex: 1,
@@ -222,6 +221,7 @@ const styles = StyleSheet.create({
   },
   telegramHeader: {
     borderRadius: 20,
+    borderWidth: 1,
     padding: 20,
   },
   profileMeta: {

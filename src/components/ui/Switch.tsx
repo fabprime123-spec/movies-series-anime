@@ -5,7 +5,6 @@ import { useTheme } from '../../theme/ThemeContext'
 export function Switch() {
   const [isEnabled, setIsEnabled] = useState(false)
   const animatedValue = useRef(new Animated.Value(0)).current
-  const { changeMode, theme } = useTheme()
 
   const toggleSwitch = () => {
     const toValue = isEnabled ? 0 : 1

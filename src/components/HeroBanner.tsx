@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { View, StyleSheet, ImageBackground, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import LinearGradient from 'react-native-linear-gradient'
+import { NativeGradient } from './native/NativeGradient'
 import { Play, Plus, Check, Heart } from 'lucide-react-native'
 import { Text } from './ui/Text'
 import { useFavorites } from '../store/FavoritesContext'
-import { getTrending } from '../api/tmdb'
 import { TMDBMedia } from '../types/tmdb'
 import { useTheme } from '../theme/ThemeContext'
 import { accents } from '../theme/accents'
@@ -15,8 +14,7 @@ const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/original'
 export function HeroBanner() {
   const { favorites, isFavorite, addFavorite, removeFavorite } = useFavorites()
   const [heroMedia, setHeroMedia] = useState<TMDBMedia | null>(null)
-  const [fav, setFav] = useState(false)
-  const { theme, accentColor } = useTheme()
+  const { theme, accentColor, dimensions } = useTheme()
   const navigation = useNavigation<any>()
 
   useEffect(() => {
@@ -25,13 +23,6 @@ export function HeroBanner() {
       const randomFav = favorites[Math.floor(Math.random() * favorites.length)]
       setHeroMedia(randomFav)
     }
-    // else {
-    //   getTrending().then(res => {
-    //     if (res.results && res.results.length > 0) {
-    //       setHeroMedia(res.results[0])
-    //     }
-    //   }).catch(console.error)
-    // }
     else return
   }, [favorites])
 
@@ -63,11 +54,22 @@ export function HeroBanner() {
       }}
     >
       {imageUrl ? (
-        <ImageBackground source={{ uri: imageUrl }} style={styles.image}>
-          <LinearGradient
-            colors={['transparent', 'transparent', 'transparent', 'transparent', theme.background]}
-            style={styles.gradient}
-          >
+        <ImageBackground source={{ uri: imageUrl }} style={[styles.image]}>
+          <NativeGradient
+            colors={["transparent", "transparent", theme.background]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+
+          {/* Horizontal Gradint */}
+          {/* <NativeGradient
+            colors={[theme.background, "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", theme.background]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          /> */}
+          <View style={styles.gradient}>
             <View style={styles.content}>
               <Text weight="bold" size={22} style={[styles.title, { color: theme.foreground, textShadowColor: theme.background + "80", }]} numberOfLines={1}>
                 {title}
@@ -76,7 +78,7 @@ export function HeroBanner() {
               <View style={styles.actions}>
                 <TouchableOpacity
                   activeOpacity={0.9}
-                  style={[styles.playButton, { boxShadow: `0px 0px 10px ${theme.foreground}, inset 0px 0px 10px ${theme.foreground}` }]}
+                  style={[styles.playButton, { boxShadow: `0px 0px 10px ${theme.foreground}, inset 0px 0px 20px ${theme.foreground}` }]}
                   onPress={() => {
                     if (heroMedia) {
                       navigation.navigate('Details', {
@@ -90,19 +92,19 @@ export function HeroBanner() {
                   <Text weight="bold" style={[styles.playText, { color: theme.foreground }]}>Play</Text>
                 </TouchableOpacity>
 
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <TouchableOpacity style={[styles.actionButton]} onPress={() => setFav(prev => prev == true ? false : true)}>
-                    <Heart color={accents.rose} size={34} strokeWidth={1} fill={fav ? accents.rose : "#ffffff00"} />
+                <View style={{ flexDirection: "row", gap: 16 }}>
+                  <TouchableOpacity style={[styles.actionButton]} onPress={() => isFavorite(heroMedia.id) ? removeFavorite(heroMedia.id) : addFavorite(heroMedia)}>
+                    <Heart color={accents.rose} size={34} strokeWidth={1} fill={isFavorite(heroMedia.id) ? accents.rose : "#ffffff00"} />
                   </TouchableOpacity>
 
                   <TouchableOpacity style={[styles.actionButton]} onPress={toggleFavorite}>
-                    {isFav ? <Check color={theme.foreground} size={24} /> : <Plus color={theme.foreground} size={24} />}
+                    {isFavorite(heroMedia.id) ? <Check color={theme.foreground} size={24} /> : <Plus color={theme.foreground} size={24} />}
                     <Text style={[styles.actionText, { color: theme.foreground }]}>My List</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </View>
-          </LinearGradient>
+          </View>
         </ImageBackground>
       ) : (
         <View style={styles.placeholder} />
@@ -116,6 +118,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 2.7 / 3,
     marginBottom: 20,
+    alignItems: "center"
   },
   image: {
     width: '100%',
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 26,
     paddingBottom: 10,
     alignItems: 'center',
   },
@@ -153,7 +156,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: "flex-start",
     gap: 8,
-    borderWidth: 0.011,
+    borderWidth: 0,
   },
   playText: {
     fontSize: 18,
