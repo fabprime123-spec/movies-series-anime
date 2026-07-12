@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface SearchHistoryData {
   recentSearches: string[];
   addSearch: (query: string) => Promise<void>;
+  removeSearch: (query: string) => Promise<void>;
   clearSearches: () => Promise<void>;
 }
 
@@ -41,13 +42,23 @@ export function SearchHistoryProvider({ children }: { children: React.ReactNode 
     }
   };
 
+  const removeSearch = async (query: string) => {
+    try {
+      const filtered = recentSearches.filter(q => q.toLowerCase() !== query.toLowerCase());
+      setRecentSearches(filtered);
+      await AsyncStorage.setItem('@app_search_history', JSON.stringify(filtered));
+    } catch (e) {
+      console.error('Failed to remove from search history', e);
+    }
+  };
+
   const clearSearches = async () => {
     setRecentSearches([]);
     await AsyncStorage.removeItem('@app_search_history');
   };
 
   return (
-    <SearchHistoryContext.Provider value={{ recentSearches, addSearch, clearSearches }}>
+    <SearchHistoryContext.Provider value={{ recentSearches, addSearch, removeSearch, clearSearches }}>
       {children}
     </SearchHistoryContext.Provider>
   );

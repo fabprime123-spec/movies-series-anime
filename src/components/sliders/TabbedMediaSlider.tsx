@@ -70,7 +70,7 @@ export const TabbedMediaSlider = React.memo(function TabbedMediaSlider({ tabs }:
                 }
               ]}
             >
-              {React.cloneElement(tab.Icon as React.ReactElement<any>, { color: activeTab === index ? theme.background : theme.muted })}
+              {React.cloneElement(tab.Icon as React.ReactElement<any>, { color: activeTab === index ? theme.foreground : theme.muted })}
               <Text
                 weight={activeTab == index ? "bold" : "semibold"}
                 color={activeTab == index ? theme.foreground : theme.muted}

@@ -1,5 +1,5 @@
 import React from "react"
-import { StyleSheet, View, ScrollView, TouchableOpacity, Image, } from "react-native"
+import { StyleSheet, View, ScrollView, TouchableOpacity, Image, Alert } from "react-native"
 import { Container } from "../components/ui/Container"
 import { Text } from "../components/ui/Text"
 import { useTheme } from "../theme/ThemeContext"
@@ -10,6 +10,7 @@ import { useFavorites } from "../store/FavoritesContext"
 import { useNavigation } from "@react-navigation/native"
 import { User, Settings, Bookmark, Download, HelpCircle, LogOut, ChevronRight, Sparkles, Mail, UserCheck, Award, History, Heart, GitBranch, Bolt, } from "lucide-react-native"
 import { NativeGradient } from '../components/native/NativeGradient'
+import { Linking } from "react-native"
 
 export function ProfileScreen() {
   const { theme, accentColor } = useTheme()
@@ -63,10 +64,14 @@ export function ProfileScreen() {
               <View style={styles.nameRow}>
                 <Text style={[styles.displayName, { color: theme.foreground }]}>{displayName}</Text>
                 {!user?.isGuest && (
-                  <View style={[styles.proBadge, { backgroundColor: accentColor }]}>
+                  <TouchableOpacity 
+                    activeOpacity={0.8}
+                    onPress={() => Alert.alert("FabPrime Plus", "More FabPrime exclusive features are coming in the next update!")}
+                    style={[styles.proBadge, { backgroundColor: accentColor }]}
+                  >
                     <Sparkles size={10} color="#FFF" />
                     <Text style={styles.proText}>PRO</Text>
-                  </View>
+                  </TouchableOpacity>
                 )}
               </View>
               <Text style={styles.statusText}>online</Text>
@@ -144,15 +149,15 @@ export function ProfileScreen() {
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>Library</Text>
           <MenuRow icon={Bookmark} title="Watchlist Manager" subtitle="Manage your saved watchlist" color={accentColor} theme={theme} onPress={() => navigation.navigate("Library")} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <MenuRow icon={Download} title="Offline Downloads" subtitle="Saved videos and download settings" color={accentColor} theme={theme} />
+          <MenuRow icon={Download} title="Offline Downloads" subtitle="Saved videos and download settings" color={accentColor} theme={theme} onPress={() => navigation.navigate("Library")} />
         </View>
 
         {/* Settings & Support Section */}
         <View style={[styles.telegramSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <Text style={[styles.sectionTitle, { color: theme.muted }]}>Settings & Support</Text>
-          <MenuRow icon={GitBranch} title="GitHub" subtitle="Source Code & Updates on Github" color={"#ffffff99"} theme={theme} onPress={() => navigation.navigate("Settings")} />
+          <MenuRow icon={GitBranch} title="GitHub" subtitle="Source Code & Updates on Github" color={"#ffffff99"} theme={theme} onPress={() => Linking.openURL("https://github.com")} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <MenuRow icon={HelpCircle} title="Help & Support" subtitle="Guides, FAQs, and contact" color={accentColor} theme={theme} />
+          <MenuRow icon={HelpCircle} title="Help & Support" subtitle="Guides, FAQs, and contact" color={accentColor} theme={theme} onPress={() => Alert.alert("Help & Support", "Support portal is currently under maintenance. Please check back later.")} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <MenuRow icon={LogOut} title="Log Out" subtitle="Disconnect from FabPrime" color="#FF0000" theme={theme} onPress={logout} danger />
         </View>

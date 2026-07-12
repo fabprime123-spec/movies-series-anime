@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { View, StyleSheet, ScrollView, ImageBackground, TouchableOpacity, Image, FlatList } from 'react-native'
+import { View, StyleSheet, ScrollView, ImageBackground, TouchableOpacity, Image, FlatList, Modal } from 'react-native'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { NativeGradient } from '../components/native/NativeGradient'
-import { ChevronLeft, Calendar, Clock } from 'lucide-react-native'
+import { ChevronLeft, Calendar, Clock, X } from 'lucide-react-native'
 import { Text } from '../components/ui/Text'
 import { getSeasonDetails } from '../api/tmdb'
 import { useTheme } from '../theme/ThemeContext'
@@ -20,6 +20,7 @@ export function SeasonScreen() {
 
   const [season, setSeason] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [selectedEpisode, setSelectedEpisode] = useState<any>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -49,48 +50,56 @@ export function SeasonScreen() {
 
   const renderEpisode = ({ item }: { item: any }) => {
     const stillImage = item.still_path ? `${STILL_BASE_URL}${item.still_path}` : null
-    
+
     return (
-      <View style={[styles.episodeCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        {stillImage ? (
-          <Image source={{ uri: stillImage }} style={styles.episodeImage} resizeMode="cover" />
-        ) : (
-          <View style={[styles.episodeImage, { backgroundColor: theme.surface, justifyContent: 'center', alignItems: 'center' }]}>
-            <Text color={theme.muted}>No Image</Text>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => setSelectedEpisode(item)}
+        style={[styles.episodeCard, { backgroundColor: theme.card, borderColor: theme.border, height: "auto", flexDirection: "column" }]}
+      >
+        <View style={{ flexDirection: "row" }}>
+          {stillImage ? (
+            <Image source={{ uri: stillImage }} style={[{ height: 70, aspectRatio: 16 / 9, borderRadius: 8 }]} resizeMode="cover" />
+          ) : (
+            <View style={[styles.episodeImage, { backgroundColor: theme.surface, justifyContent: 'center', alignItems: 'center' }]}>
+              <Text color={theme.muted}>No Image</Text>
+            </View>
+          )}
+          <View style={{ flex: 1, padding: 12, justifyContent: 'center' }}>
+            <Text weight="bold" size={16} numberOfLines={2}>
+              {item.episode_number}. {item.name}
+            </Text>
+            <View style={styles.episodeMeta}>
+              {item.air_date && (
+                <View style={styles.metaBadge}>
+                  <Calendar size={12} color={theme.muted} />
+                  <Text size={12} color={theme.muted} style={{ marginLeft: 4 }}>{item.air_date}</Text>
+                </View>
+              )}
+              {item.runtime > 0 && (
+                <View style={styles.metaBadge}>
+                  <Clock size={12} color={theme.muted} />
+                  <Text size={12} color={theme.muted} style={{ marginLeft: 4 }}>{item.runtime}m</Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
-        <View style={styles.episodeContent}>
-          <Text weight="bold" size={16} numberOfLines={2}>
-            {item.episode_number}. {item.name}
-          </Text>
-          <View style={styles.episodeMeta}>
-            {item.air_date && (
-              <View style={styles.metaBadge}>
-                <Calendar size={12} color={theme.muted} />
-                <Text size={12} color={theme.muted} style={{ marginLeft: 4 }}>{item.air_date}</Text>
-              </View>
-            )}
-            {item.runtime > 0 && (
-              <View style={styles.metaBadge}>
-                <Clock size={12} color={theme.muted} />
-                <Text size={12} color={theme.muted} style={{ marginLeft: 4 }}>{item.runtime}m</Text>
-              </View>
-            )}
-          </View>
+        </View>
+        <View style={{ padding: 12, paddingTop: 0 }}>
           {item.overview ? (
-            <Text size={13} color={theme.muted} numberOfLines={3} style={{ marginTop: 8 }}>
+            <Text size={13} color={theme.muted} numberOfLines={3} style={{ marginTop: 4 }}>
               {item.overview}
             </Text>
           ) : null}
         </View>
-      </View>
+      </TouchableOpacity>
     )
   }
 
   return (
     <Container useSafeArea={true}>
       <ScrollView style={[styles.container, { backgroundColor: theme.background }]} showsVerticalScrollIndicator={false}>
-        
+
         {/* HERO SECTION */}
         <View style={styles.header}>
           {posterImage ? (
@@ -149,12 +158,53 @@ export function SeasonScreen() {
 
       </ScrollView>
       <NativeGradient
-        colors={["transparent", "transparent", theme.background]}
+        colors={[theme.background, "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", theme.background]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
+
+      <Modal visible={!!selectedEpisode} transparent animationType="slide" onRequestClose={() => setSelectedEpisode(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' }}>
+          <View style={{ backgroundColor: theme.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, maxHeight: '80%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <Text weight="bold" size={20} style={{ flex: 1 }}>{selectedEpisode?.episode_number}. {selectedEpisode?.name}</Text>
+              <TouchableOpacity onPress={() => setSelectedEpisode(null)} style={{ padding: 8, backgroundColor: theme.surface, borderRadius: 20 }}>
+                <X size={20} color={theme.foreground} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {selectedEpisode?.still_path && (
+                <Image
+                  source={{ uri: `${STILL_BASE_URL}${selectedEpisode.still_path}` }}
+                  style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 12, marginBottom: 16 }}
+                />
+              )}
+              <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
+                {selectedEpisode?.air_date && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Calendar size={14} color={theme.muted} />
+                    <Text size={14} color={theme.muted}>{selectedEpisode.air_date}</Text>
+                  </View>
+                )}
+                {selectedEpisode?.runtime > 0 && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Clock size={14} color={theme.muted} />
+                    <Text size={14} color={theme.muted}>{selectedEpisode.runtime}m</Text>
+                  </View>
+                )}
+              </View>
+              {selectedEpisode?.overview ? (
+                <Text size={15} color={theme.foreground} style={{ lineHeight: 24 }}>{selectedEpisode.overview}</Text>
+              ) : (
+                <Text size={15} color={theme.muted} style={{ fontStyle: 'italic' }}>No overview available.</Text>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
     </Container>
   )
 }
@@ -172,10 +222,13 @@ const styles = StyleSheet.create({
   titleInfo: { flex: 1, paddingBottom: 4 },
   overviewSection: { marginBottom: 32 },
   overview: { lineHeight: 22 },
-  episodesSection: { marginTop: 8 },
+  episodesSection: { marginTop: 8, gap: 16 },
   sectionTitle: { marginBottom: 16 },
-  episodeCard: { flexDirection: 'row', borderRadius: 12, overflow: 'hidden', marginBottom: 16, borderWidth: 1 },
-  episodeImage: { width: 120, height: '100%', aspectRatio: 16/9 },
+  episodeCard: { flexDirection: 'row', borderRadius: 12, overflow: 'hidden', marginBottom: 0, borderWidth: 1 },
+  episodeImage: {
+    width: 120, height: '100%', aspectRatio: 16 / 9, borderWidth: 1,
+    borderColor: '#fff'
+  },
   episodeContent: { flex: 1, padding: 12, justifyContent: 'center' },
   episodeMeta: { flexDirection: 'row', marginTop: 8, gap: 12 },
   metaBadge: { flexDirection: 'row', alignItems: 'center' }

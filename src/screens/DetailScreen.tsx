@@ -33,6 +33,7 @@ export function DetailScreen() {
 
   const [details, setDetails] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [overviewExpanded, setOverviewExpanded] = useState(false)
 
   const [isDownloadingZip, setIsDownloadingZip] = useState(false)
   const [downloadProgressText, setDownloadProgressText] = useState('')
@@ -124,7 +125,12 @@ export function DetailScreen() {
   // Safe data extraction
   const posterImage = details.poster_path ? `${IMAGE_BASE_URL}${details.poster_path}` : null
   const imageUrl = details.backdrop_path ? `${IMAGE_BASE_URL}${details.backdrop_path}` : null
-  const title = details.title || details.name || details.original_title || details.original_name
+
+  // Titles
+  const mainTitle = details.title || details.name
+  const originalTitle = details.original_title || details.original_name
+  const showOriginalTitle = originalTitle && originalTitle !== mainTitle
+
   const year = (details.release_date || details.first_air_date || '').substring(0, 4)
   const runtime = details.runtime ? `${details.runtime} min` : details.number_of_seasons ? `${details.number_of_seasons} Seasons` : ''
   const cast = details.credits?.cast || []
@@ -151,30 +157,24 @@ export function DetailScreen() {
         {/* HERO SECTION */}
         <View style={styles.header}>
           {imageUrl ? (
-            <ImageBackground source={{ uri: imageUrl as string }} style={styles.image}>
+            <ImageBackground source={{ uri: imageUrl as string }} style={[styles.image]}>
               <NativeGradient
-                colors={["rgba(0,0,0,0.5)", "transparent", theme.background]}
+                colors={["rgba(0,0,0,0)", "rgba(0,0,0,0)", "rgba(0,0,0,0)", theme.background]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 style={StyleSheet.absoluteFill}
               />
               <View style={styles.gradient}>
                 <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                  <ChevronLeft color={theme.foreground} size={28} />
+                  <ChevronLeft color={"#FFF"} size={28} />
                 </TouchableOpacity>
               </View>
-              <Image
-                source={{ uri: posterImage as string }}
-                style={{
-                  borderRadius: 10,
-                  aspectRatio: 9 / 16,
-                  position: "absolute",
-                  right: 4,
-                  bottom: -50,
-                  minWidth: 100,
-                  minHeight: 150,
-                }}
-              />
+              <View style={styles.heroPosterContainer}>
+                <Image
+                  source={{ uri: posterImage as string }}
+                  style={styles.heroPoster}
+                />
+              </View>
             </ImageBackground>
           ) : (
             <View style={[styles.image, { backgroundColor: theme.card }]}>
@@ -186,7 +186,12 @@ export function DetailScreen() {
         </View>
 
         <View style={styles.content}>
-          <Text weight="semibold" size={32} style={styles.title}>{title}</Text>
+          <Text weight="bold" size={36} style={styles.title}>{mainTitle || originalTitle}</Text>
+          {showOriginalTitle && (
+            <Text weight="semibold" size={16} color={theme.muted} style={{ marginBottom: 12, marginTop: -4 }}>
+              ({originalTitle})
+            </Text>
+          )}
           {details.tagline ? <Text color={theme.muted} style={styles.tagline}>"{details.tagline}"</Text> : null}
 
           {/* QUICK INFO */}
@@ -266,7 +271,20 @@ export function DetailScreen() {
 
           {/* OVERVIEW */}
           <Text style={styles.sectionHeader} weight="bold" size={20}>Overview</Text>
-          <Text style={styles.overview} color={theme.muted}>{details.overview || 'No overview available.'}</Text>
+          <TouchableOpacity activeOpacity={0.8} onPress={() => setOverviewExpanded(!overviewExpanded)}>
+            <Text
+              style={styles.overview}
+              color={theme.muted}
+              numberOfLines={overviewExpanded ? undefined : 4}
+            >
+              {details.overview || 'No overview available.'}
+            </Text>
+            {details.overview && details.overview.length > 150 && (
+              <Text weight="bold" style={{ color: accentColor, marginTop: 4 }}>
+                {overviewExpanded ? "Show Less" : "Read More"}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* EXTENDED INFO (Budget, Language, Countries) */}
@@ -360,7 +378,7 @@ export function DetailScreen() {
                 <TouchableOpacity
                   style={styles.seasonCard}
                   activeOpacity={0.8}
-                  onPress={() => navigation.navigate('Season', { tvId: details.id, seasonNumber: item.season_number, showName: title })}
+                  onPress={() => navigation.navigate('Season', { tvId: details.id, seasonNumber: item.season_number, showName: item.title })}
                 >
                   {item.poster_path ? (
                     <ImageBackground source={{ uri: `${IMAGE_BASE_URL}${item.poster_path}` }} style={styles.seasonImage} imageStyle={{ borderRadius: 8 }}>
@@ -447,16 +465,58 @@ export function DetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { width: '100%', height: "auto", aspectRatio: 16 / 13 },
-  image: { width: '100%', height: '100%', aspectRatio: 16 / 13 },
-  gradient: { flex: 1, justifyContent: 'space-between' },
-  backButton: { padding: 20, marginTop: 10 },
-  content: { padding: 10, marginTop: -40 },
-  padding: { padding: 0 },
+  container: {
+    flex: 1,
+  },
+  padding: {
+    padding: 20,
+  },
+  header: {
+    width: '100%',
+  },
+  image: {
+    width: '100%',
+    height: 300,
+  },
+  heroPosterContainer: {
+    position: "absolute",
+    left: 20,
+    bottom: -60,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  heroPoster: {
+    borderRadius: 12,
+    aspectRatio: 2 / 3,
+    minWidth: 120,
+    minHeight: 180,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)'
+  },
+  gradient: {
+    flex: 1,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 20,
+    padding: 8
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 70,
+    paddingBottom: 24,
+  },
   title: {
-    marginBottom: 10, maxWidth: "74%",
-    minHeight: 75
+    marginBottom: 20,
+    minHeight: 75,
+    width: "auto"
   },
   tagline: { fontStyle: 'italic', marginBottom: 12 },
   meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 },

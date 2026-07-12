@@ -6,7 +6,10 @@ import { Text } from '../components/ui/Text'
 import { useFavorites } from '../store/FavoritesContext'
 import { useWatchlist } from '../store/WatchlistContext'
 import { useHistory } from '../store/HistoryContext'
+import { useDownloads } from '../store/DownloadsContext'
+import { useCollections } from '../store/CollectionsContext'
 import { NativeMediaList } from '../components/native/NativeMediaList'
+import { NativeGridMediaList } from '../components/native/NativeGridMediaList'
 import { MediaCard } from '../components/cards/MediaCard'
 import { useTheme } from '../theme/ThemeContext'
 import { Wave, Dots, Pulse, Spin, Audio, Breathe, Typing, Squish, PingPong, Morph, Lines, Radar } from "../animations/animation"
@@ -16,44 +19,36 @@ import { Bookmark, Download, Heart, Shapes, Timer } from 'lucide-react-native'
 import LinearGradient from 'react-native-linear-gradient'
 
 type Tab = 'Favorites' | 'Watchlist' | 'History' | 'Downloads' | 'Collections'
-const animations = [
-  "Wave",
-  "Audio",
-  "Breathe",
-  "Dots",
-  "Lines",
-  "Morph",
-  "PingPong",
-  "Pulse",
-  "Radar",
-  "Spin",
-  "Squish",
-  "Typing",
-]
+interface Tabs {
+  Icon: React.ReactNode
+  name: Tab
+}
 
 export function LibraryScreen() {
   const { theme, accentColor } = useTheme()
   const navigation = useNavigation<any>()
   const [activeTab, setActiveTab] = useState<Tab>('Favorites')
-  const x = <View style={{ height: 40, width: 40 }} />
 
   const { favorites } = useFavorites()
   const { watchlist } = useWatchlist()
-  const { history } = useHistory()
+  const { history, removeHistoryItem } = useHistory()
+  const { downloads } = useDownloads()
+  const { collections } = useCollections()
 
   const getTabData = () => {
     switch (activeTab) {
       case 'Favorites': return favorites
       case 'Watchlist': return watchlist
       case 'History': return history
+      case 'Downloads': return downloads
+      case 'Collections': return collections
       default: return []
     }
   }
 
   const data = getTabData()
 
-  // const TABS: Tab[] = ['Favorites', 'Watchlist', 'History', 'Downloads', 'Collections']
-  const TABS = [
+  const TABS: Tabs[] = [
     { Icon: <Heart color={theme.foreground} size={17} />, name: 'Favorites' },
     { Icon: <Bookmark color={theme.foreground} size={17} />, name: 'Watchlist' },
     { Icon: <Timer color={theme.foreground} size={17} />, name: 'History' },
@@ -63,11 +58,21 @@ export function LibraryScreen() {
 
   const keyExtractor = useCallback((item: any) => `${item.id}-${activeTab}`, [activeTab])
   const renderItem = useCallback(({ item }: any) => (
-    <SearchCard
-      media={item}
-      onPress={() => navigation.navigate('Details', { id: item.id, type: item.title ? 'movie' : 'tv' })}
-    />
-  ), [navigation])
+    <View style={{ flex: 1, position: 'relative' }}>
+      <SearchCard
+        media={item}
+        onPress={() => navigation.navigate('Details', { id: item.id, type: item.title ? 'movie' : 'tv' })}
+      />
+      {activeTab === 'History' && (
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={() => removeHistoryItem(item.id)}
+        >
+          <Text style={{ color: '#FFF', fontSize: 10, fontWeight: 'bold' }}>✕</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  ), [navigation, activeTab, removeHistoryItem])
 
   return (
     <Container useSafeArea contentContainerStyle={styles.container}>
@@ -110,16 +115,10 @@ export function LibraryScreen() {
       {/* CONTENT */}
       <View style={{ flex: 1, marginTop: -10 }}>
         {data.length > 0 ? (
-          <NativeMediaList
+          <NativeGridMediaList
             key={activeTab}
             data={data}
-            isGrid={true}
-            isHorizontalCard={false}
-            onItemPress={(e) => {
-              const media = data.find((m: any) => m.id === e.nativeEvent.id);
-              navigation.navigate('Details', { id: e.nativeEvent.id, type: media?.media_type || e.nativeEvent.mediaType || (media?.title ? 'movie' : 'tv') })
-            }}
-            style={{ flex: 1, width: '100%' }}
+            style={{ flex: 1, width: '100%', paddingTop: 20 }}
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -173,5 +172,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
+  },
+  deleteBtn: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)'
   }
 })

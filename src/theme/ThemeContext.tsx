@@ -24,6 +24,8 @@ interface ThemeContextType {
   changeAccent: (color: string) => void
   safeAreaInsets: SafeAreaInsetsType
   dimensions: DimensionsType
+  galleryViewMode: "horizontal" | "vertical"
+  setGalleryViewMode: (mode: "horizontal" | "vertical") => void
 }
 
 const ThemeContext = createContext<ThemeContextType | null>(null)
@@ -34,6 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const safeAreaInsets = useSafeAreaInsets()
   const { width, height, scale } = Dimensions.get("window")
   const dimensions: DimensionsType = { height, width, scale }
+  const [galleryViewMode, setGalleryViewMode] = useState<"horizontal" | "vertical">("horizontal")
 
 
   const theme = colors[mode]
@@ -49,7 +52,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         changeMode,
         changeAccent,
         safeAreaInsets,
-        dimensions
+        dimensions,
+        galleryViewMode,
+        setGalleryViewMode
       }}
     >
       {children}

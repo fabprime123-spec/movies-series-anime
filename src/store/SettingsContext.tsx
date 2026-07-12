@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setGlobalBannedCountry } from '../api/tmdb';
+import { setGlobalBannedCountries } from '../api/tmdb';
 
 export interface SettingsData {
   appLanguage: string;
@@ -20,6 +20,7 @@ export interface SettingsData {
   hideEmptySeasons: boolean;
   autoClearHistory: boolean;
   offlineMode: boolean;
+  galleryViewMode: 'vertical' | 'horizontal';
 
   updateSetting: (key: keyof Omit<SettingsData, 'updateSetting' | 'clearSettings'>, value: any) => Promise<void>;
   clearSettings: () => Promise<void>;
@@ -43,6 +44,7 @@ const DEFAULT_SETTINGS: Omit<SettingsData, 'updateSetting' | 'clearSettings'> = 
   hideEmptySeasons: true,
   autoClearHistory: false,
   offlineMode: false,
+  galleryViewMode: 'horizontal',
 };
 
 const SettingsContext = createContext<SettingsData | undefined>(undefined);
@@ -62,7 +64,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         setSettings({ ...DEFAULT_SETTINGS, ...parsed });
         // Restore global interceptor for first excluded country if any
         if (parsed.excludedCountries && parsed.excludedCountries.length > 0) {
-          setGlobalBannedCountry(parsed.excludedCountries[0]);
+          setGlobalBannedCountries(parsed.excludedCountries);
         }
       } else {
         setSettings(DEFAULT_SETTINGS);
@@ -80,7 +82,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // If we change excluded countries, update global interceptor to first one
       if (key === 'excludedCountries') {
         const list = value as string[];
-        setGlobalBannedCountry(list.length > 0 ? list[0] : null);
+        setGlobalBannedCountries(list);
       }
 
       await AsyncStorage.setItem('@app_settings', JSON.stringify(newSettings));
@@ -93,7 +95,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     try {
       setSettings(DEFAULT_SETTINGS);
       await AsyncStorage.removeItem('@app_settings');
-      setGlobalBannedCountry(null);
+      setGlobalBannedCountries([]);
     } catch (e) {
       console.error('Failed to clear settings', e);
     }

@@ -10,19 +10,41 @@ const apiClient = axios.create({
   },
 })
 
-let globalBannedCountry: string | null = null
+let globalBannedCountries: string[] = []
 
-export const setGlobalBannedCountry = (code: string | null) => {
-  globalBannedCountry = code
+export const setGlobalBannedCountries = (codes: string[]) => {
+  globalBannedCountries = codes
+}
+
+const languageToCountry: Record<string, string[]> = {
+  hi: ['IN'],
+  ta: ['IN'],
+  te: ['IN'],
+  ml: ['IN'],
+  kn: ['IN'],
+  mr: ['IN'],
+  bn: ['IN', 'BD'],
+  ko: ['KR'],
+  ja: ['JP'],
+  zh: ['CN', 'TW', 'HK'],
 }
 
 // Global interceptor to filter out banned countries from ALL responses
 apiClient.interceptors.response.use((response) => {
-  if (globalBannedCountry && response.data && Array.isArray(response.data.results)) {
+  if (globalBannedCountries.length > 0 && response.data && Array.isArray(response.data.results)) {
     response.data.results = response.data.results.filter((item: any) => {
-      // For TV and Movies, origin_country is an array of country codes
+      // 1. Check origin_country
       if (item.origin_country && Array.isArray(item.origin_country)) {
-        return !item.origin_country.includes(globalBannedCountry)
+        if (item.origin_country.some((country: string) => globalBannedCountries.includes(country))) {
+          return false
+        }
+      }
+      // 2. Fallback check for original_language
+      if (item.original_language) {
+        const mappedCountries = languageToCountry[item.original_language] || []
+        if (mappedCountries.some((country: string) => globalBannedCountries.includes(country))) {
+          return false
+        }
       }
       return true
     })

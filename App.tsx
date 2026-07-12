@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View, LogBox } from 'react-native'
+LogBox.ignoreLogs(['Open debugger to view warning']);
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Router } from './src/navigation/Router'
 
@@ -9,6 +10,8 @@ import { WatchlistProvider } from './src/store/WatchlistContext'
 import { HistoryProvider } from './src/store/HistoryContext'
 import { SearchHistoryProvider } from './src/store/SearchHistoryContext'
 import { AuthProvider } from './src/store/AuthContext'
+import { CollectionsProvider } from './src/store/CollectionsContext'
+import { DownloadsProvider } from './src/store/DownloadsContext'
 
 function App() {
   return (
@@ -21,7 +24,11 @@ function App() {
               <SearchHistoryProvider>
                 <FavoritesProvider>
                   <ThemeProvider>
-                    <Router />
+                    <CollectionsProvider>
+                      <DownloadsProvider>
+                        <Router />
+                      </DownloadsProvider>
+                    </CollectionsProvider>
                   </ThemeProvider>
                 </FavoritesProvider>
               </SearchHistoryProvider>

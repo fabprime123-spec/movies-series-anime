@@ -40,7 +40,6 @@ export const SearchCard = React.memo(function SearchCard({ media, onPress }: Med
 const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
-    maxWidth: 106.2,
     borderRadius: 12,
     aspectRatio: 2 / 3,
     overflow: 'hidden',

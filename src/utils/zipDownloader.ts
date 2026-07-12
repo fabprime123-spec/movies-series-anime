@@ -37,7 +37,7 @@ export const downloadMediaPackage = async (
       if (img.file_path) {
         imagesToDownload.push({
           url: `https://image.tmdb.org/t/p/original${img.file_path}`,
-          path: `images/${subfolder}_${idx + 1}.jpg`
+          path: `images/${subfolder}/${subfolder}_${idx + 1}.jpg`
         });
       }
     });
@@ -46,19 +46,22 @@ export const downloadMediaPackage = async (
   if (details.poster_path) {
     imagesToDownload.push({
       url: `https://image.tmdb.org/t/p/original${details.poster_path}`,
-      path: `images/Primary_Poster.jpg`
+      path: `Primary_Poster.jpg`
     });
   }
   if (details.backdrop_path) {
     imagesToDownload.push({
       url: `https://image.tmdb.org/t/p/original${details.backdrop_path}`,
-      path: `images/Primary_Backdrop.jpg`
+      path: `Primary_Backdrop.jpg`
     });
   }
 
-  pushImages(details.images?.posters, 'poster');
-  pushImages(details.images?.backdrops, 'backdrop');
-  pushImages(details.images?.logos, 'logo');
+  pushImages(details.images?.posters, 'posters');
+  pushImages(details.images?.backdrops, 'backdrops');
+  pushImages(details.images?.logos, 'logos');
+
+  const linksContent = imagesToDownload.map(img => img.url).join('\n');
+  metadataMap['links.txt'] = linksContent;
 
   // 3. Listen to Progress
   const subscription = mediaDownloaderEmitter.addListener(

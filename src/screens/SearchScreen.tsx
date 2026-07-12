@@ -11,6 +11,8 @@ import { useSearchHistory } from '../store/SearchHistoryContext'
 import { SearchCard } from '../components/cards/SearchCard'
 import { NativeGradient } from '../components/native/NativeGradient'
 import { Top10Slider } from '../components/sliders/Top10Slider'
+import { CustomAlert } from '../components/ui/CustomAlert'
+import { NativeGridMediaList } from '../components/native/NativeGridMediaList'
 
 const { width } = Dimensions.get("window")
 export function SearchScreen() {
@@ -18,9 +20,10 @@ export function SearchScreen() {
   const [results, setResults] = useState<any[]>([])
   const [trending, setTrending] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
+  const [clearSearchVisible, setClearSearchVisible] = useState(false)
   const navigation = useNavigation<any>()
   const { theme } = useTheme()
-  const { recentSearches, addSearch, clearSearches } = useSearchHistory()
+  const { recentSearches, addSearch, removeSearch, clearSearches } = useSearchHistory()
 
   useEffect(() => {
     getTrending().then(res => setTrending(res.results)).catch(console.error)
@@ -103,46 +106,63 @@ export function SearchScreen() {
       </View>
 
       {!query.trim() ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100, paddingTop: 30 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{
+          paddingTop: 30,
+          height: "auto",
+          gap: 20,
+        }}>
           {recentSearches.length > 0 && (
             <View style={styles.recentSection}>
               <View style={styles.recentHeader}>
                 <Text weight="bold" size={16}>Recent Searches</Text>
-                <TouchableOpacity onPress={clearSearches}>
+                <TouchableOpacity onPress={() => setClearSearchVisible(true)}>
                   <Text color={theme.muted} size={12}>Clear</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.recentPills}>
                 {recentSearches.map((keyword, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[styles.pill, { backgroundColor: theme.card, borderColor: theme.border }]}
-                    onPress={() => handleRecentSearchTap(keyword)}
-                  >
-                    <Clock color={theme.muted} size={14} />
-                    <Text size={12}>{keyword}</Text>
-                  </TouchableOpacity>
+                  <View key={index} style={[styles.pillContainer, { borderColor: theme.border, backgroundColor: theme.card }]}>
+                    <TouchableOpacity
+                      style={styles.pillTextContainer}
+                      onPress={() => handleRecentSearchTap(keyword)}
+                    >
+                      <Clock color={theme.muted} size={14} />
+                      <Text size={12}>{keyword}</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.pillDivider, { backgroundColor: theme.border }]} />
+                    <TouchableOpacity
+                      style={styles.pillRemoveBtn}
+                      onPress={() => removeSearch(keyword)}
+                    >
+                      <X color={theme.muted} size={14} />
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </View>
             </View>
           )}
-
           {trending.length > 0 && (
             <Top10Slider data={trending} title="Top Searches Today" />
           )}
         </ScrollView>
       ) : (
-        <FlatList
+        <NativeGridMediaList
+          key={query}
           data={results}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          numColumns={3}
-          contentContainerStyle={styles.grid}
-          columnWrapperStyle={styles.row}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+          style={{ flex: 1, width: '100%', paddingTop: 24 }}
         />
       )}
+
+      <CustomAlert
+        visible={clearSearchVisible}
+        onClose={() => setClearSearchVisible(false)}
+        title="Clear Searches"
+        message="Are you sure you want to clear your search history?"
+        buttons={[
+          { text: "Cancel", style: "cancel" },
+          { text: "Clear", style: "destructive", onPress: () => clearSearches() }
+        ]}
+      />
     </Container>
   )
 }
@@ -150,6 +170,7 @@ export function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     paddingTop: 16,
+    justifyContent: "flex-start"
   },
   searchBar: {
     flexDirection: 'row',
@@ -194,15 +215,31 @@ const styles = StyleSheet.create({
   recentPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
   },
-  pill: {
+  pillContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  pillTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
+    paddingLeft: 12,
+    paddingRight: 8,
     paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
+  },
+  pillDivider: {
+    width: 1,
+    height: '60%',
+  },
+  pillRemoveBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   }
 })

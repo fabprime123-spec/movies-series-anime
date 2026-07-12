@@ -5,6 +5,7 @@ import { TMDBMedia } from '../types/tmdb';
 interface HistoryContextData {
   history: TMDBMedia[];
   addHistory: (media: TMDBMedia) => Promise<void>;
+  removeHistoryItem: (id: number) => Promise<void>;
   clearHistory: () => Promise<void>;
 }
 
@@ -41,13 +42,23 @@ export function HistoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const removeHistoryItem = async (id: number) => {
+    try {
+      const filtered = history.filter((item) => item.id !== id);
+      setHistory(filtered);
+      await AsyncStorage.setItem('@app_history', JSON.stringify(filtered));
+    } catch (e) {
+      console.error('Failed to remove from history', e);
+    }
+  };
+
   const clearHistory = async () => {
     setHistory([]);
     await AsyncStorage.removeItem('@app_history');
   };
 
   return (
-    <HistoryContext.Provider value={{ history, addHistory, clearHistory }}>
+    <HistoryContext.Provider value={{ history, addHistory, removeHistoryItem, clearHistory }}>
       {children}
     </HistoryContext.Provider>
   );

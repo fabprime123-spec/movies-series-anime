@@ -56,29 +56,22 @@ export function HeroBanner() {
       {imageUrl ? (
         <ImageBackground source={{ uri: imageUrl }} style={[styles.image]}>
           <NativeGradient
-            colors={["transparent", "transparent", theme.background]}
+            colors={["transparent", "transparent", theme.background + "aa", theme.background]}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
 
-          {/* Horizontal Gradint */}
-          {/* <NativeGradient
-            colors={[theme.background, "transparent", "transparent", "transparent", "transparent", "transparent", "transparent", theme.background]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
-          /> */}
           <View style={styles.gradient}>
             <View style={styles.content}>
-              <Text weight="bold" size={22} style={[styles.title, { color: theme.foreground, textShadowColor: theme.background + "80", }]} numberOfLines={1}>
+              <Text weight="semibold" size={36} style={[styles.title, { color: theme.foreground, textShadowColor: theme.background + "aa", textShadowRadius: 10 }]} numberOfLines={2}>
                 {title}
               </Text>
 
               <View style={styles.actions}>
                 <TouchableOpacity
                   activeOpacity={0.9}
-                  style={[styles.playButton, { boxShadow: `0px 0px 10px ${theme.foreground}, inset 0px 0px 20px ${theme.foreground}` }]}
+                  style={[styles.playButton, { backgroundColor: accentColor, shadowColor: accentColor, shadowOpacity: 0.8, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }]}
                   onPress={() => {
                     if (heroMedia) {
                       navigation.navigate('Details', {
@@ -88,20 +81,13 @@ export function HeroBanner() {
                     }
                   }}
                 >
-                  <Play color={theme.foreground} size={24} fill={theme.foreground} />
+                  <Play color={"#FFF"} size={22} fill={"#FFF"} />
                   <Text weight="bold" style={[styles.playText, { color: theme.foreground }]}>Play</Text>
                 </TouchableOpacity>
 
-                <View style={{ flexDirection: "row", gap: 16 }}>
-                  <TouchableOpacity style={[styles.actionButton]} onPress={() => isFavorite(heroMedia.id) ? removeFavorite(heroMedia.id) : addFavorite(heroMedia)}>
-                    <Heart color={accents.rose} size={34} strokeWidth={1} fill={isFavorite(heroMedia.id) ? accents.rose : "#ffffff00"} />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity style={[styles.actionButton]} onPress={toggleFavorite}>
-                    {isFavorite(heroMedia.id) ? <Check color={theme.foreground} size={24} /> : <Plus color={theme.foreground} size={24} />}
-                    <Text style={[styles.actionText, { color: theme.foreground }]}>My List</Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity style={[styles.actionButton]} onPress={toggleFavorite}>
+                  <Heart color={isFavorite(heroMedia.id) ? "#ff00a0" : theme.foreground} size={36} strokeWidth={1} fill={isFavorite(heroMedia.id) ? "#ff00a0" : "transparent"} />
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -135,9 +121,7 @@ const styles = StyleSheet.create({
   },
   title: {
     textAlign: "left",
-    marginBottom: 16,
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    marginBottom: 20,
     width: "100%",
   },
   actions: {
@@ -146,20 +130,19 @@ const styles = StyleSheet.create({
     gap: 20,
     justifyContent: "space-between",
     width: "100%",
-    paddingHorizontal: 0
   },
   playButton: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: "flex-start",
+    justifyContent: "center",
     gap: 8,
-    borderWidth: 0,
   },
   playText: {
     fontSize: 18,
+    letterSpacing: 0.5,
   },
   actionButton: {
     alignItems: 'center',

@@ -34,8 +34,26 @@ export function Top10Slider({ data, title = "Top 10 Trending Today" }: Top10Slid
             activeOpacity={0.9}
             onPress={() => navigation.navigate('Details', { id: item.id, type: item.media_type || 'movie' })}
           >
+            <View style={[styles.posterWrapper, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              {item.poster_path ? (
+                <Image
+                  source={{ uri: `${IMAGE_BASE_URL}${item.poster_path}` }}
+                  style={styles.poster}
+                />
+              ) : (
+                <View style={[styles.poster, styles.noImage]}>
+                  <Text size={12} color={theme.muted} style={{ textAlign: 'center' }}>No Image</Text>
+                </View>
+              )}
+            </View>
+
             {/* The huge background number */}
-            <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+            <View pointerEvents="none" style={{
+              zIndex: 40,
+              position: "absolute",
+              bottom: 0,
+              left: "50%"
+            }}>
               <Text
                 weight="bold"
                 style={[
@@ -52,19 +70,6 @@ export function Top10Slider({ data, title = "Top 10 Trending Today" }: Top10Slid
                 {index + 1}
               </Text>
             </View>
-
-            <View style={[styles.posterWrapper, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              {item.poster_path ? (
-                <Image
-                  source={{ uri: `${IMAGE_BASE_URL}${item.poster_path}` }}
-                  style={styles.poster}
-                />
-              ) : (
-                <View style={[styles.poster, styles.noImage]}>
-                  <Text size={12} color={theme.muted} style={{ textAlign: 'center' }}>No Image</Text>
-                </View>
-              )}
-            </View>
           </TouchableOpacity>
         )}
       />
@@ -76,7 +81,7 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 20,
     marginTop: 30,
-    gap: 10
+    gap: 16
   },
   title: {
     paddingHorizontal: 20,
@@ -87,8 +92,9 @@ const styles = StyleSheet.create({
     height: "auto"
   },
   cardContainer: {
-    width: "auto",
-    height: "100%",
+    width: "100%",
+    height: "auto",
+    maxWidth: 125,
     aspectRatio: 11 / 16,
     marginRight: 15,
     flexDirection: 'row',
@@ -100,7 +106,7 @@ const styles = StyleSheet.create({
     letterSpacing: -8,
     position: 'absolute',
     bottom: 4,
-    zIndex: 50
+    zIndex: 500
   },
   posterWrapper: {
     height: '95%',
